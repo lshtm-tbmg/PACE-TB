@@ -1,0 +1,2206 @@
+<?xml version="1.0" encoding="UTF-8"?> <!--IGNORE THIS VERSION NUMBER. SEE ACTUAL VERSION NUMBER BELOW.-->
+<TB.Vx.model.inputfile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../TBmod-schema-M2.xsd">
+<!--NIH2-CORE-COMPv1.4: COMPREHENSIVE XML WITH FUNCTIONALITY FOR TIME-VARYING PARAMETERS AND INTERVENTION-SPECIFIC COMPARTMENTS-->
+
+  <simulation from.year="1900" thru.year="2051" dt="0.5">
+    <options>
+      <numerical.integration method="ode45" atol="1e-4" rtol="1e-4" min.value.for.state.var="-0.1"/>
+    </options>
+    <demography country.code="ignored" rescale.population="2050">
+      <from.data>
+        <population file="data/demographics.csv"/>
+        <birthrate from.population.data="true"/>
+        <mortality file="data/deathrates.csv"/>
+      </from.data>
+    </demography>
+    <contact.matrix file="data/all_contacts_2021.txt" Mtb-strain="r_pri_cx" ignore.risk.group.mixing="false"/>
+    <contact.matrix file="data/all_contacts_2021.txt" Mtb-strain="s_pri_cx" ignore.risk.group.mixing="false"/>
+  </simulation>
+
+  <output>
+    <detailed.output years="seq(2019,2050,1)" age.group.lower.limits="0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75" econ.output="true" suppress.zeros.in.stocks="false" suppress.zeros.in.flows="false" combine.stocks.and.flows="false">
+      <flows dim="TB" incidence="true" transmission="true" progression="true" treatment="true"/>
+      <flows dim="HIV" />
+      <flows dim="VXa" />
+      <flows dim="RISK"/>
+      <flows dim="SES" />
+    </detailed.output>
+  </output>
+
+  <ages lower.limits="5*(0:15)"/> 
+  <VXa> <VXa.states> <state name="NA"/> </VXa.states> </VXa>
+  <SES> <SES.states> <state name="NA"/> </SES.states> </SES>
+  <RISK> 
+    <RISK.states>
+      <state name="community" fraction.at.birth="1"/>
+      <state name="exprsn" fraction.at.birth="0"/>
+      <state name="prison" fraction.at.birth="0"/>
+      <state name="exprsndead" fraction.at.birth="0"/>
+      <state name="priscount" fraction.at.birth="0"/>
+    </RISK.states>
+    <RISK.incidence>
+        <incidence.data file="data/prison_incidence.txt" times="1980,2019" values="1,1" proportions="false" denominator="susc" once.per.year="false" target.prevalence="true"/>
+        <incidence.data file="data/exprsn_incidence.txt" times="1980,2019" values="1,1" proportions="false" denominator="susc" once.per.year="false" target.prevalence="true"/>
+     </RISK.incidence>
+    <RISK.progression>
+      <age.groups>
+        <age.group name="A0"/>
+        <age.group name="A15"/>
+      </age.groups>
+      <RISK.parameter age.group="A0" name="f" value="0"/>
+      <RISK.parameter age.group="A15" name="f" value="1"/>
+       
+      <!--TIME-SPECIFIC RATE OF INCARCERATION FROM COMMUNITY-->  
+      <RISK.parameter name="compris1" value="0.0"/>
+      <RISK.parameter name="compris2" value="0.00054"/>
+      <RISK.parameter name="compris3" value="0.0021"/>
+      <RISK.parameter name="compris4" value="0.002"/>
+      
+      <!--RATE OF INCARCERATION FROM EX-PRISONERS--> 
+      <RISK.parameter name="expris" value="0.2229"/>
+
+      <!--TIME-SPECIFIC RATE OF RELEASE FROM IMPRISONMENT-->
+      <RISK.parameter name="prisex1" value="1.2"/>
+      <RISK.parameter name="prisex2" value="1"/>
+      <RISK.parameter name="prisex3" value="1"/>
+      
+      <!--RATE OF EXPRISONERS ENTERING THE COMMUNITY-->
+      <RISK.parameter name="excom" value="0.143"/>
+
+      <!--MORTALITY AMONG EX-PRISONERS-->
+      <RISK.parameter name="exmortmult" value="0.1985"/>
+        
+      <constant.transition.matrix>
+        <transition from="exprsn" to="community" rate="excom"/>
+        <transition from="exprsn" to="prison" rate="expris"/>
+        <transition from="exprsn" to="priscount" rate="expris"/>
+        <transition from="exprsn" to="exprsndead" rate= "exmortmult*0.01696"/>
+      </constant.transition.matrix>
+      
+      <transition.matrix name="comprisoverall">
+        <transition from="community" to="prison" rate="1*f"/>
+        <transition from="community" to="priscount" rate="1*f"/>
+        <multiplier name="comprismult" times="1980,1990,2020,2024" values="compris1,compris2,compris3,compris4"/>
+      </transition.matrix>
+
+      <transition.matrix name="exprsnoverall">
+        <transition from="prison" to="exprsn" rate="1"/>
+        <multiplier name="prisexmult" times="1990,2015,2024" values="prisex1,prisex2,prisex3"/>
+      </transition.matrix>
+
+    </RISK.progression>
+  </RISK>
+  <HIV> <HIV.states> <state name="NA"/> </HIV.states> </HIV>
+  
+  <TB>
+    <TB.states>
+
+      <!--NEVER TREATED-->
+      <state name="S_N" fraction.at.birth="1"/> 
+      <state name="C_N"/>
+      <state name="R_N"/>
+      <state name="I_s_N"/>
+      <state name="I_r_N"/>
+      <state name="Dn_s_N"/>
+      <state name="Dn_r_N"/>
+      <state name="Ds_s_N"/>
+      <state name="Ds_r_N"/>
+      <state name="Dc_s_N"/>
+      <state name="Dc_r_N"/>
+
+      <!--PREVIOUSLY TREATED-->
+      <state name="S_P"/>
+      <state name="C_P"/>
+      <state name="R_P"/>
+      <state name="I_s_P"/>
+      <state name="I_r_P"/>
+      <state name="Dn_s_P"/>
+      <state name="Dn_r_P"/>
+      <state name="Ds_s_P"/>
+      <state name="Ds_r_P"/>
+      <state name="Dc_s_P"/>
+      <state name="Dc_r_P"/>
+      <state name="Tr_s_P"/>
+      <state name="Tr_r_P"/>
+      <state name="Tc_P"/>
+
+      <!--ON TREATMENT-->
+      <state name="ST_S"/>
+      <state name="RT_S"/>
+      <state name="ST_C"/>
+      <state name="RT_C"/>
+      <state name="ST_R"/>
+      <state name="RT_R"/>
+      <state name="ST_I_s"/>
+      <state name="RT_I_s"/>
+      <state name="ST_I_r"/>
+      <state name="RT_I_r"/>
+      <state name="ST_Dn_s"/>
+      <state name="RT_Dn_s"/>
+      <state name="ST_Dn_r"/>
+      <state name="RT_Dn_r"/>
+      <state name="ST_Ds_s"/>
+      <state name="RT_Ds_s"/>
+      <state name="ST_Ds_r"/>
+      <state name="RT_Ds_r"/>
+      <state name="ST_Dc_s"/>
+      <state name="RT_Dc_s"/>
+      <state name="ST_Dc_r"/>
+      <state name="RT_Dc_r"/>
+      <state name="ST_Tc"/>
+      <state name="RT_Tc"/>
+
+      <!--ON TREATMENT DUE TO INTERVENTION-->
+      <state name="iST_S"/>
+      <state name="iRT_S"/>
+      <state name="iST_C"/>
+      <state name="iRT_C"/>
+      <state name="iST_R"/>
+      <state name="iRT_R"/>
+      <state name="iST_I_s"/>
+      <state name="iRT_I_s"/>
+      <state name="iST_I_r"/>
+      <state name="iRT_I_r"/>
+      <state name="iST_Dn_s"/>
+      <state name="iRT_Dn_s"/>
+      <state name="iST_Dn_r"/>
+      <state name="iRT_Dn_r"/>
+      <state name="iST_Ds_s"/>
+      <state name="iRT_Ds_s"/>
+      <state name="iST_Ds_r"/>
+      <state name="iRT_Ds_r"/>
+      <state name="iST_Dc_s"/>
+      <state name="iRT_Dc_s"/>
+      <state name="iST_Dc_r"/>
+      <state name="iRT_Dc_r"/>
+      <state name="iST_Tc"/>
+      <state name="iRT_Tc"/>
+
+      <!--RECENTLY TREATED FROM INTERVENTION-->
+      <state name="iTr_s_P"/>
+      <state name="iTr_r_P"/>
+
+      <!--COUNT STATES-->
+      <state name="Inc_Dc_count"/>
+      <state name="Not_N_count"/> 
+      <state name="Not_P_count"/> 
+      <state name="MDR_N_count"/> 
+      <state name="MDR_P_count"/> 
+      <state name="Diag_count"/> 
+      <state name="Test_count"/>
+
+      <!--COUNT STATES: MORTALITY--> 
+      <state name="Dn_s_dead"/>
+      <state name="Dn_r_dead"/>
+      <state name="Dc_s_dead"/>
+      <state name="Dc_r_dead"/>
+      <state name="ST_Dn_s_dead"/> 
+      <state name="ST_Dn_r_dead"/> 
+      <state name="ST_Dc_s_dead"/> 
+      <state name="ST_Dc_r_dead"/> 
+      <state name="RT_Dn_s_dead"/> 
+      <state name="RT_Dn_r_dead"/> 
+      <state name="RT_Dc_s_dead"/> 
+      <state name="RT_Dc_r_dead"/> 
+
+      <!--COUNT STATES: TB COUNTS--> 
+      <state name="Dn_s_count"/>
+      <state name="Dn_r_count"/>
+      <state name="Ds_s_count"/>
+      <state name="Ds_r_count"/>
+      <state name="Dc_s_count"/>   
+      <state name="Dc_r_count"/>      
+      <state name="Ds_s_P_count"/> 
+      <state name="Ds_r_P_count"/>     
+      <state name="Dc_s_P_count"/> 
+      <state name="Dc_r_P_count"/> 
+      <state name="Tr_s_P_count"/> 
+      <state name="Tr_r_P_count"/> 
+      <state name="I_s_count"/>         
+      <state name="I_r_count"/>  
+      <state name="I_s_Tc_count"/>
+      <state name="I_r_Tc_count"/>
+
+      <!--COUNT STATES: ST TREATMENT INITIATION--> 
+      <state name="ST_S_N_count"/>
+      <state name="ST_C_N_count"/>
+      <state name="ST_R_N_count"/>
+      <state name="ST_I_s_N_count"/>
+      <state name="ST_I_r_N_count"/>
+      <state name="ST_Dn_s_N_count"/>
+      <state name="ST_Dn_r_N_count"/>
+      <state name="ST_Ds_s_N_count"/>
+      <state name="ST_Ds_r_N_count"/>
+      <state name="ST_Dc_s_N_count"/>
+      <state name="ST_Dc_r_N_count"/>
+      <state name="ST_S_P_count"/>
+      <state name="ST_C_P_count"/>
+      <state name="ST_R_P_count"/>
+      <state name="ST_I_s_P_count"/>
+      <state name="ST_I_r_P_count"/>
+      <state name="ST_Dn_s_P_count"/>
+      <state name="ST_Dn_r_P_count"/>
+      <state name="ST_Ds_s_P_count"/>
+      <state name="ST_Ds_r_P_count"/>
+      <state name="ST_Dc_s_P_count"/>
+      <state name="ST_Dc_r_P_count"/>
+      <state name="ST_Tc_P_count"/>
+
+      <!--COUNT STATES: RT TREATMENT INITIATION--> 
+      <state name="RT_S_N_count"/>
+      <state name="RT_C_N_count"/>
+      <state name="RT_R_N_count"/>
+      <state name="RT_I_s_N_count"/>
+      <state name="RT_I_r_N_count"/>
+      <state name="RT_Dn_s_N_count"/>
+      <state name="RT_Dn_r_N_count"/>
+      <state name="RT_Ds_s_N_count"/>
+      <state name="RT_Ds_r_N_count"/>
+      <state name="RT_Dc_s_N_count"/>
+      <state name="RT_Dc_r_N_count"/>
+      <state name="RT_S_P_count"/>
+      <state name="RT_C_P_count"/>
+      <state name="RT_R_P_count"/>
+      <state name="RT_I_s_P_count"/>
+      <state name="RT_I_r_P_count"/>
+      <state name="RT_Dn_s_P_count"/>
+      <state name="RT_Dn_r_P_count"/>
+      <state name="RT_Ds_s_P_count"/>
+      <state name="RT_Ds_r_P_count"/>
+      <state name="RT_Dc_s_P_count"/>
+      <state name="RT_Dc_r_P_count"/>
+      <state name="RT_Tc_P_count"/>  
+
+      <!--COUNT STATES: ST TREATMENT SUCCESSFUL--> 
+      <state name="ST_S_succ_count"/>   
+      <state name="ST_C_succ_count"/>
+      <state name="ST_I_succ_count"/>   
+      <state name="ST_R_succ_count"/>   
+      <state name="ST_Tc_succ_count"/>
+      <state name="ST_Dn_succ_count"/>     
+      <state name="ST_Ds_succ_count"/>
+      <state name="ST_Dc_succ_count"/>  
+      <state name="ST_succ_count"/>   
+
+      <!--COUNT STATES: RT TREATMENT SUCCESSFUL--> 
+      <state name="RT_S_succ_count"/>   
+      <state name="RT_C_succ_count"/>
+      <state name="RT_I_succ_count"/>   
+      <state name="RT_R_succ_count"/>   
+      <state name="RT_Tc_succ_count"/>
+      <state name="RT_Dn_succ_count"/>     
+      <state name="RT_Ds_succ_count"/>
+      <state name="RT_Dc_succ_count"/>
+      <state name="RT_succ_count"/> 
+
+      <!--COUNT STATES: ST TREATMENT UNSUCCESSFUL--> 
+      <state name="ST_S_unsucc_count"/>   
+      <state name="ST_C_unsucc_count"/>
+      <state name="ST_I_unsucc_count"/>   
+      <state name="ST_R_unsucc_count"/>   
+      <state name="ST_Tc_unsucc_count"/>
+      <state name="ST_Dn_unsucc_count"/>     
+      <state name="ST_Ds_unsucc_count"/>
+      <state name="ST_Dc_unsucc_count"/>  
+      <state name="ST_unsucc_count"/> 
+
+      <!--COUNT STATES: RT TREATMENT UNSUCCESSFUL--> 
+      <state name="RT_S_unsucc_count"/>   
+      <state name="RT_C_unsucc_count"/>
+      <state name="RT_I_unsucc_count"/>   
+      <state name="RT_R_unsucc_count"/>   
+      <state name="RT_Tc_unsucc_count"/>
+      <state name="RT_Dn_unsucc_count"/>     
+      <state name="RT_Ds_unsucc_count"/>
+      <state name="RT_Dc_unsucc_count"/>  
+      <state name="RT_unsucc_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES-->
+      <state name="iNot_N_count"/> 
+      <state name="iNot_P_count"/> 
+      <state name="iMDR_N_count"/> 
+      <state name="iMDR_P_count"/> 
+      <state name="iDiag_count"/> 
+      <state name="iTest_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: MORTALITY-->
+      <state name="iST_Dn_s_dead"/> 
+      <state name="iST_Dn_r_dead"/> 
+      <state name="iST_Dc_s_dead"/> 
+      <state name="iST_Dc_r_dead"/> 
+      <state name="iRT_Dn_s_dead"/> 
+      <state name="iRT_Dn_r_dead"/> 
+      <state name="iRT_Dc_s_dead"/> 
+      <state name="iRT_Dc_r_dead"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: TB COUNTS-->
+      <state name="iTr_s_P_count"/> 
+      <state name="iTr_r_P_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: ST TREATMENT INITIATION-->
+      <state name="iST_S_N_count"/>
+      <state name="iST_C_N_count"/>
+      <state name="iST_R_N_count"/>
+      <state name="iST_I_s_N_count"/>
+      <state name="iST_I_r_N_count"/>
+      <state name="iST_Dn_s_N_count"/>
+      <state name="iST_Dn_r_N_count"/>
+      <state name="iST_Ds_s_N_count"/>
+      <state name="iST_Ds_r_N_count"/>
+      <state name="iST_Dc_s_N_count"/>
+      <state name="iST_Dc_r_N_count"/>
+      <state name="iST_S_P_count"/>
+      <state name="iST_C_P_count"/>
+      <state name="iST_R_P_count"/>
+      <state name="iST_I_s_P_count"/>
+      <state name="iST_I_r_P_count"/>
+      <state name="iST_Dn_s_P_count"/>
+      <state name="iST_Dn_r_P_count"/>
+      <state name="iST_Ds_s_P_count"/>
+      <state name="iST_Ds_r_P_count"/>
+      <state name="iST_Dc_s_P_count"/>
+      <state name="iST_Dc_r_P_count"/>
+      <state name="iST_Tc_P_count"/>
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: RT TREATMENT INITIATION-->
+      <state name="iRT_S_N_count"/>
+      <state name="iRT_C_N_count"/>
+      <state name="iRT_R_N_count"/>
+      <state name="iRT_I_s_N_count"/>
+      <state name="iRT_I_r_N_count"/>
+      <state name="iRT_Dn_s_N_count"/>
+      <state name="iRT_Dn_r_N_count"/>
+      <state name="iRT_Ds_s_N_count"/>
+      <state name="iRT_Ds_r_N_count"/>
+      <state name="iRT_Dc_s_N_count"/>
+      <state name="iRT_Dc_r_N_count"/>
+      <state name="iRT_S_P_count"/>
+      <state name="iRT_C_P_count"/>
+      <state name="iRT_R_P_count"/>
+      <state name="iRT_I_s_P_count"/>
+      <state name="iRT_I_r_P_count"/>
+      <state name="iRT_Dn_s_P_count"/>
+      <state name="iRT_Dn_r_P_count"/>
+      <state name="iRT_Ds_s_P_count"/>
+      <state name="iRT_Ds_r_P_count"/>
+      <state name="iRT_Dc_s_P_count"/>
+      <state name="iRT_Dc_r_P_count"/>
+      <state name="iRT_Tc_P_count"/>
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: ST TREATMENT SUCCESSFUL-->
+      <state name="iST_S_succ_count"/>   
+      <state name="iST_C_succ_count"/>
+      <state name="iST_I_succ_count"/>   
+      <state name="iST_R_succ_count"/>   
+      <state name="iST_Tc_succ_count"/>
+      <state name="iST_Dn_succ_count"/>     
+      <state name="iST_Ds_succ_count"/>
+      <state name="iST_Dc_succ_count"/>  
+      <state name="iST_succ_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: RT TREATMENT SUCCESSFUL-->
+      <state name="iRT_S_succ_count"/>   
+      <state name="iRT_C_succ_count"/>
+      <state name="iRT_I_succ_count"/>   
+      <state name="iRT_R_succ_count"/>   
+      <state name="iRT_Tc_succ_count"/>
+      <state name="iRT_Dn_succ_count"/>     
+      <state name="iRT_Ds_succ_count"/>
+      <state name="iRT_Dc_succ_count"/>
+      <state name="iRT_succ_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: ST TREATMENT UNSUCCESSFUL-->
+      <state name="iST_S_unsucc_count"/>   
+      <state name="iST_C_unsucc_count"/>
+      <state name="iST_I_unsucc_count"/>   
+      <state name="iST_R_unsucc_count"/>   
+      <state name="iST_Tc_unsucc_count"/>
+      <state name="iST_Dn_unsucc_count"/>     
+      <state name="iST_Ds_unsucc_count"/>
+      <state name="iST_Dc_unsucc_count"/>  
+      <state name="iST_unsucc_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: RT TREATMENT UNSUCCESSFUL-->
+      <state name="iRT_S_unsucc_count"/>   
+      <state name="iRT_C_unsucc_count"/>
+      <state name="iRT_I_unsucc_count"/>   
+      <state name="iRT_R_unsucc_count"/>   
+      <state name="iRT_Tc_unsucc_count"/>
+      <state name="iRT_Dn_unsucc_count"/>     
+      <state name="iRT_Ds_unsucc_count"/>
+      <state name="iRT_Dc_unsucc_count"/>  
+      <state name="iRT_unsucc_count"/> 
+
+      <!--INTERVENTION-SPECIFIC COUNT STATES: TEST COUNT FOR XPERT (those that test positive with CXR and are going to receive Xpert)-->
+      <state name="n_screen_CXRpositive_count"/>
+
+    </TB.states>
+
+    <seeded.infections name="multiplier" value="1.0"> 
+        <seeded.infection fraction="0.0066"   age.from="0" age.thru="99" state="I_s_N"/>
+        <seeded.infection fraction="0.0042"   age.from="0" age.thru="99" state="Dn_s_N"/>
+        <seeded.infection fraction="0.00067" age.from="0" age.thru="99" state="Ds_s_N"/>
+        <seeded.infection fraction="0.00047" age.from="0" age.thru="99" state="Dc_s_N"/>
+        <seeded.infection fraction="0.000085"   age.from="0" age.thru="99" state="I_r_N"/>
+        <seeded.infection fraction="0.000050"   age.from="0" age.thru="99" state="Dn_r_N"/>
+        <seeded.infection fraction="0.0000089" age.from="0" age.thru="99" state="Ds_r_N"/>
+        <seeded.infection fraction="0.0000068" age.from="0" age.thru="99" state="Dc_r_N"/>
+    </seeded.infections>
+
+    <TB.progression>
+      <age.groups>
+        <age.group name="A0"/> 
+        <age.group name="A15"/> 
+      </age.groups>
+
+      <!--NATURAL HISTORY FLOWS-->
+      <TB.parameter name="infclr"       value="1.9"/>
+      <TB.parameter name="infnon"       value="0.14"/>
+      <TB.parameter name="infsub"       value="0.06"/>
+      <TB.parameter name="nonrec"       value="0.2"/>
+      <TB.parameter name="nonsub"       value="0.26"/>
+      <TB.parameter name="subnon"       value="2"/> 
+      <TB.parameter name="subclin"      value="0.8"/> 
+      <TB.parameter name="clinsub"      value="0.72"/>
+      <TB.parameter name="muDn"         value="0.01"/>
+      <TB.parameter name="muDc"         value="0.05"/>
+
+      <!--TREATMENT + MDR FLOWS-->
+      <TB.parameter name="midx"         value="2000"/> 
+      <TB.parameter name="sh"           value="0.1"/> 
+      <TB.parameter RISK.state= "prison" name ="eta"          value="0.69"/> 
+      <TB.parameter RISK.state= "community" name ="eta"          value="0.47"/> 
+      <TB.parameter RISK.state= "exprsn" name ="eta"          value="0.47"/> 
+      <TB.parameter RISK.state= "exprsndead" name ="eta"          value="0.0"/> 
+      <TB.parameter RISK.state= "priscount" name ="eta"          value="0.0"/> 
+      <TB.parameter name="dst_n"        value="0.318"/> 
+      <TB.parameter name="dst_p"        value="0.341"/>   
+      <TB.parameter name="dst_s"        value="0.01"/> 
+      <TB.parameter name="dst_r"        value="0.95"/> 
+      <TB.parameter name="comp_st"      value="2.0"/>
+      <TB.parameter name="comp_rt"      value="0.67"/>
+      <TB.parameter name="succ_stI"     value="1.0"/>
+      <TB.parameter name="succ_rtI"     value="1.0"/>
+      <TB.parameter name="succ_stDn"    value="0.7882353"/>
+      <TB.parameter name="succ_rtDn"    value="0.6875"/>
+      <TB.parameter name="succ_stDs"    value="0.67"/>
+      <TB.parameter name="succ_rtDs"    value="0.55"/>
+      <TB.parameter name="succ_stDc"    value="0.7882353"/>
+      <TB.parameter name="succ_rtDc"    value="0.6875"/>
+      <TB.parameter name="succ_strs"    value="0.35"/>
+      <TB.parameter name="mort_stDn"    value="0.15"/>
+      <TB.parameter name="mort_rtDn"    value="0.20"/> 
+      <TB.parameter name="mort_stDc"    value="0.15"/>
+      <TB.parameter name="mort_rtDc"    value="0.20"/> 
+      <TB.parameter name="acqres"       value="0.012"/> 
+      <TB.parameter name="relnon_s"     value="0.01"/>
+      <TB.parameter name="relsub_s"     value="0.01"/>
+      <TB.parameter name="relnon_r"     value="0.06"/>
+      <TB.parameter name="relsub_r"     value="0.06"/>
+      <TB.parameter name="trtot"        value="1.0"/> 
+
+      <!--AGE-SPECIFIC FLOWS-->
+      <TB.parameter age.group="A0"      name="mort_age"     value="1"/> 
+      <TB.parameter age.group="A15"     name="mort_age"     value="0"/>       
+      <TB.parameter age.group="A0"      name="prog_age"     value="0.86"/> 
+      <TB.parameter age.group="A15"     name="prog_age"     value="1"/> 
+      <TB.parameter age.group="A0"      name="dx_age"       value="0.25"/> 
+      <TB.parameter age.group="A15"     name="dx_age"       value="1"/>
+
+      <!--AGE-SPECIFIC FLOWS: USED TO ONLY ALLOW ACCESS TO ADULTS IN SCR -->
+      <TB.parameter age.group="A0"    name="scr_age"      value="0"/> 
+      <TB.parameter age.group="A15"   name="scr_age"      value="1"/>
+
+    <!--INCARCERATION-SPECIFIC FLOWS-->    
+      <TB.parameter RISK.state="community"    name="prog_not_inprison"   value="1"/>
+      <TB.parameter RISK.state="exprsn"       name="prog_not_inprison"   value="0"/>
+      <TB.parameter RISK.state="prison"       name="prog_not_inprison"   value="0"/>
+      <TB.parameter RISK.state="exprsndead"   name="prog_not_inprison"   value="0"/>
+      <TB.parameter RISK.state="priscount"   name="prog_not_inprison"   value="0"/>
+      <TB.parameter RISK.state="community"    name="inprison"   value="0"/>
+      <TB.parameter RISK.state="exprsn"       name="inprison"   value="1"/>
+      <TB.parameter RISK.state="prison"       name="inprison"   value="1"/> 
+      <TB.parameter RISK.state="exprsndead"   name="inprison"   value="0"/>
+      <TB.parameter RISK.state="priscount"   name="inprison"   value="0"/>
+
+      <TB.parameter name="prog_inprison"   value="1.1"/> 
+      <TB.parameter name="prog_contRate_pri" value="1.53"/> 
+      
+      <tests>
+        <!--BUSINESS-AS-USUAL TREATMENT INITIATION-->
+        <test name="access"> 
+         <TB.state.tested name="S_N"    fraction.positive="0.06"/>
+         <TB.state.tested name="C_N"    fraction.positive="0.06"/>
+         <TB.state.tested name="R_N"    fraction.positive="0.06"/>
+         <TB.state.tested name="I_s_N"  fraction.positive="0.06"/>
+         <TB.state.tested name="I_r_N"  fraction.positive="0.06"/>
+         <TB.state.tested name="Dn_s_N" fraction.positive="0.19"/>
+         <TB.state.tested name="Dn_r_N" fraction.positive="0.19"/>
+         <TB.state.tested name="Ds_s_N" fraction.positive="0.06"/>
+         <TB.state.tested name="Ds_r_N" fraction.positive="0.06"/>
+         <TB.state.tested name="Dc_s_N" fraction.positive="1.00"/>
+         <TB.state.tested name="Dc_r_N" fraction.positive="1.00"/>
+         <TB.state.tested name="S_P"    fraction.positive="0.09"/>
+         <TB.state.tested name="C_P"    fraction.positive="0.09"/>
+         <TB.state.tested name="R_P"    fraction.positive="0.09"/>
+         <TB.state.tested name="I_s_P"  fraction.positive="0.09"/>
+         <TB.state.tested name="I_r_P"  fraction.positive="0.09"/>
+         <TB.state.tested name="Dn_s_P" fraction.positive="0.29"/>
+         <TB.state.tested name="Dn_r_P" fraction.positive="0.29"/>
+         <TB.state.tested name="Ds_s_P" fraction.positive="0.09"/>
+         <TB.state.tested name="Ds_r_P" fraction.positive="0.09"/>
+         <TB.state.tested name="Dc_s_P" fraction.positive="1.50"/>
+         <TB.state.tested name="Dc_r_P" fraction.positive="1.50"/>
+         <TB.state.tested name="Tc_P"   fraction.positive="0.09"/>
+        </test>
+        <test name="testpos"> 
+         <TB.state.tested name="S_N"    fraction.positive="0.0208"/>
+         <TB.state.tested name="C_N"    fraction.positive="0.0208"/>
+         <TB.state.tested name="R_N"    fraction.positive="0.0635"/>
+         <TB.state.tested name="I_s_N"  fraction.positive="0.0208"/>
+         <TB.state.tested name="I_r_N"  fraction.positive="0.0208"/>
+         <TB.state.tested name="Dn_s_N" fraction.positive="0.0909"/>
+         <TB.state.tested name="Dn_r_N" fraction.positive="0.0909"/>
+         <TB.state.tested name="Ds_s_N" fraction.positive="0.4420"/>
+         <TB.state.tested name="Ds_r_N" fraction.positive="0.4420"/>
+         <TB.state.tested name="Dc_s_N" fraction.positive="0.7901"/>
+         <TB.state.tested name="Dc_r_N" fraction.positive="0.7901"/>
+         <TB.state.tested name="S_P"    fraction.positive="0.0208"/>
+         <TB.state.tested name="C_P"    fraction.positive="0.0208"/>
+         <TB.state.tested name="R_P"    fraction.positive="0.0635"/>
+         <TB.state.tested name="I_s_P"  fraction.positive="0.0208"/>
+         <TB.state.tested name="I_r_P"  fraction.positive="0.0208"/>
+         <TB.state.tested name="Dn_s_P" fraction.positive="0.0909"/>
+         <TB.state.tested name="Dn_r_P" fraction.positive="0.0909"/>
+         <TB.state.tested name="Ds_s_P" fraction.positive="0.4420"/>
+         <TB.state.tested name="Ds_r_P" fraction.positive="0.4420"/>
+         <TB.state.tested name="Dc_s_P" fraction.positive="0.7901"/>
+         <TB.state.tested name="Dc_r_P" fraction.positive="0.7901"/>
+         <TB.state.tested name="Tc_P"   fraction.positive="0.1983"/>
+        </test>
+        <test name="accept"> 
+         <TB.state.tested name="S_N"    fraction.positive="0.50"/>
+         <TB.state.tested name="C_N"    fraction.positive="0.50"/>
+         <TB.state.tested name="R_N"    fraction.positive="0.50"/>
+         <TB.state.tested name="I_s_N"  fraction.positive="0.50"/>
+         <TB.state.tested name="I_r_N"  fraction.positive="0.50"/>
+         <TB.state.tested name="Dn_s_N" fraction.positive="0.75"/>
+         <TB.state.tested name="Dn_r_N" fraction.positive="0.75"/>
+         <TB.state.tested name="Ds_s_N" fraction.positive="0.50"/>
+         <TB.state.tested name="Ds_r_N" fraction.positive="0.50"/>
+         <TB.state.tested name="Dc_s_N" fraction.positive="1.00"/>
+         <TB.state.tested name="Dc_r_N" fraction.positive="1.00"/>
+         <TB.state.tested name="S_P"    fraction.positive="0.50"/>
+         <TB.state.tested name="C_P"    fraction.positive="0.50"/>
+         <TB.state.tested name="R_P"    fraction.positive="0.50"/>
+         <TB.state.tested name="I_s_P"  fraction.positive="0.50"/>
+         <TB.state.tested name="I_r_P"  fraction.positive="0.50"/>
+         <TB.state.tested name="Dn_s_P" fraction.positive="0.75"/>
+         <TB.state.tested name="Dn_r_P" fraction.positive="0.75"/>
+         <TB.state.tested name="Ds_s_P" fraction.positive="0.50"/>
+         <TB.state.tested name="Ds_r_P" fraction.positive="0.50"/>
+         <TB.state.tested name="Dc_s_P" fraction.positive="1.00"/>
+         <TB.state.tested name="Dc_r_P" fraction.positive="1.00"/>
+         <TB.state.tested name="Tc_P"   fraction.positive="0.75"/>
+        </test>
+
+        <!--INTERVENTION - ACCESS TO DIAGNOSTIC PATHWAYS: NEVER TREATED-->
+        <test name="iaccess_SCRI_N"> 
+          <TB.state.tested name="S_N"    fraction.positive="scr_age"/>
+          <TB.state.tested name="C_N"    fraction.positive="scr_age"/>
+          <TB.state.tested name="R_N"    fraction.positive="scr_age"/>
+          <TB.state.tested name="I_s_N"  fraction.positive="scr_age"/>
+          <TB.state.tested name="I_r_N"  fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Dn_N">
+          <TB.state.tested name="Dn_s_N" fraction.positive="scr_age"/>
+          <TB.state.tested name="Dn_r_N" fraction.positive="scr_age"/>  
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Ds_N">
+          <TB.state.tested name="Ds_s_N" fraction.positive="scr_age"/>
+          <TB.state.tested name="Ds_r_N" fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Dc_N">
+          <TB.state.tested name="Dc_s_N" fraction.positive="scr_age"/>
+          <TB.state.tested name="Dc_r_N" fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+
+        <!--INTERVENTION - ACCESS TO DIAGNOSTIC PATHWAYS: PREVIOUSLY TREATED-->
+        <test name="iaccess_SCR_P"> 
+          <TB.state.tested name="S_P"    fraction.positive="scr_age"/>
+          <TB.state.tested name="C_P"    fraction.positive="scr_age"/>
+          <TB.state.tested name="R_P"    fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_I_P"> 
+          <TB.state.tested name="I_s_P"  fraction.positive="scr_age"/>
+          <TB.state.tested name="I_r_P"  fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Dn_P"> 
+          <TB.state.tested name="Dn_s_P" fraction.positive="scr_age"/>
+          <TB.state.tested name="Dn_r_P" fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Ds_P"> 
+          <TB.state.tested name="Ds_s_P" fraction.positive="scr_age"/>
+          <TB.state.tested name="Ds_r_P" fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Dc_P"> 
+          <TB.state.tested name="Dc_s_P" fraction.positive="scr_age"/>
+          <TB.state.tested name="Dc_r_P" fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+        <test name="iaccess_Tc_P"> 
+          <TB.state.tested name="Tc_P"   fraction.positive="scr_age"/>
+          <multiplier name="mult" times="1900,2025,2030,2034.99,2035" values="0,0,0.8,0.8,0"/>
+        </test>
+
+        <!--INTERVENTION - TEST POSITIVITY: NEVER TREATED AND PREVIOUSLY TREATED-->
+        <test name="itestpos_SC"> 
+          <TB.state.tested name="S_N"    fraction.positive="1"/>
+          <TB.state.tested name="C_N"    fraction.positive="1"/>
+          <TB.state.tested name="S_P"    fraction.positive="1"/>
+          <TB.state.tested name="C_P"    fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.00051"/>
+        </test>
+        <test name="itestpos_R"> 
+          <TB.state.tested name="R_N"    fraction.positive="1"/>
+          <TB.state.tested name="R_P"    fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.02012"/>
+        </test>
+        <test name="itestpos_I"> 
+          <TB.state.tested name="I_s_N"  fraction.positive="1"/>
+          <TB.state.tested name="I_r_N"  fraction.positive="1"/>
+          <TB.state.tested name="I_s_P"  fraction.positive="1"/>
+          <TB.state.tested name="I_r_P"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.00051"/>
+        </test>
+        <test name="itestpos_Dn"> 
+          <TB.state.tested name="Dn_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.029788"/>
+        </test>
+        <test name="itestpos_Ds"> 
+          <TB.state.tested name="Ds_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.524675"/>
+        </test>
+        <test name="itestpos_Dc"> 
+          <TB.state.tested name="Dc_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.77265"/>
+        </test>
+        <test name="itestpos_Tc"> 
+          <TB.state.tested name="Tc_P"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.02012"/>
+        </test>
+
+        <!--INTERVENTION - TEST POSITIVITY OF CXR: NEVER TREATED AND PREVIOUSLY TREATED-->
+        <test name="itestpos_SC_CXR"> 
+          <TB.state.tested name="S_N"    fraction.positive="1"/>
+          <TB.state.tested name="C_N"    fraction.positive="1"/>
+          <TB.state.tested name="S_P"    fraction.positive="1"/>
+          <TB.state.tested name="C_P"    fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.085"/> 
+        </test>
+        <test name="itestpos_R_CXR"> 
+          <TB.state.tested name="R_N"    fraction.positive="1"/>
+          <TB.state.tested name="R_P"    fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.503"/> 
+        </test>
+        <test name="itestpos_I_CXR"> 
+          <TB.state.tested name="I_s_N"  fraction.positive="1"/>
+          <TB.state.tested name="I_r_N"  fraction.positive="1"/>
+          <TB.state.tested name="I_s_P"  fraction.positive="1"/>
+          <TB.state.tested name="I_r_P"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.085"/> 
+        </test>
+        <test name="itestpos_Dn_CXR"> 
+          <TB.state.tested name="Dn_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.677"/> 
+        </test>
+        <test name="itestpos_Ds_CXR"> 
+          <TB.state.tested name="Ds_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.677"/> 
+        </test>
+        <test name="itestpos_Dc_CXR"> 
+          <TB.state.tested name="Dc_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.850"/>  
+        </test>
+        <test name="itestpos_Tc_CXR"> 
+          <TB.state.tested name="Tc_P"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0.503"/> 
+        </test>
+
+        <!--INTERVENTION - TREATMENT ACCEPTANCE: NEVER TREATED AND PREVIOUSLY TREATED-->
+        <test name="iaccept_low"> 
+          <TB.state.tested name="S_N"    fraction.positive="1"/>
+          <TB.state.tested name="C_N"    fraction.positive="1"/>
+          <TB.state.tested name="R_N"    fraction.positive="1"/>
+          <TB.state.tested name="I_s_N"  fraction.positive="1"/>
+          <TB.state.tested name="I_r_N"  fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
+          <TB.state.tested name="S_P"    fraction.positive="1"/>
+          <TB.state.tested name="C_P"    fraction.positive="1"/>
+          <TB.state.tested name="R_P"    fraction.positive="1"/>
+          <TB.state.tested name="I_s_P"  fraction.positive="1"/>
+          <TB.state.tested name="I_r_P"  fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,1"/> 
+        </test>
+        <test name="iaccept_med"> 
+          <TB.state.tested name="Dn_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_P" fraction.positive="1"/>
+          <TB.state.tested name="Tc_P"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,1"/>   
+        </test>
+        <test name="iaccept_high"> 
+          <TB.state.tested name="Dc_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,1"/>   
+        </test>
+
+        <!--INTERVENTION - DRUG-SUSCEPTIBILITY TESTING ACCESS: NEVER TREATED-->
+        <test name="idst_n"> 
+          <TB.state.tested name="S_N"    fraction.positive="1"/>
+          <TB.state.tested name="C_N"    fraction.positive="1"/>
+          <TB.state.tested name="R_N"    fraction.positive="1"/>
+          <TB.state.tested name="I_s_N"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_N" fraction.positive="1"/>
+          <TB.state.tested name="I_r_N"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,1"/>  
+        </test>
+        <test name="idst_p"> 
+          <TB.state.tested name="S_P"    fraction.positive="1"/>
+          <TB.state.tested name="C_P"    fraction.positive="1"/>
+          <TB.state.tested name="R_P"    fraction.positive="1"/>
+          <TB.state.tested name="I_s_P"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_P" fraction.positive="1"/>
+          <TB.state.tested name="I_r_P"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
+          <TB.state.tested name="Tc_P"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,1"/> 
+        </test>
+
+        <!--INTERVENTION - DRUG-SUSCEPTIBILITY POSITIVITY-->
+        <test name="idst_s"> 
+          <TB.state.tested name="S_N"    fraction.positive="1"/>
+          <TB.state.tested name="C_N"    fraction.positive="1"/>
+          <TB.state.tested name="R_N"    fraction.positive="1"/>
+          <TB.state.tested name="I_s_N"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_N" fraction.positive="1"/>
+          <TB.state.tested name="S_P"    fraction.positive="1"/>
+          <TB.state.tested name="C_P"    fraction.positive="1"/>
+          <TB.state.tested name="R_P"    fraction.positive="1"/>
+          <TB.state.tested name="I_s_P"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_s_P" fraction.positive="1"/>
+          <TB.state.tested name="Tc_P"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,dst_s"/>  
+        </test>
+        <test name="idst_r"> 
+          <TB.state.tested name="I_r_N"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
+          <TB.state.tested name="I_r_P"  fraction.positive="1"/>
+          <TB.state.tested name="Dn_r_P" fraction.positive="1"/>
+          <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
+          <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,dst_r"/>  
+        </test>
+
+        <!--INTERVENTION - TREATMENT DURATION--> 
+        <test name="icomp_st">
+          <TB.state.tested name="iST_S"    fraction.positive="1"/>
+          <TB.state.tested name="iST_C"    fraction.positive="1"/>
+          <TB.state.tested name="iST_R"    fraction.positive="1"/>
+          <TB.state.tested name="iST_I_s"  fraction.positive="1"/>
+          <TB.state.tested name="iST_I_r"  fraction.positive="1"/>
+          <TB.state.tested name="iST_Dn_s" fraction.positive="1"/>
+          <TB.state.tested name="iST_Dn_r" fraction.positive="1"/>
+          <TB.state.tested name="iST_Ds_s" fraction.positive="1"/>
+          <TB.state.tested name="iST_Ds_r" fraction.positive="1"/>
+          <TB.state.tested name="iST_Dc_s" fraction.positive="1"/>
+          <TB.state.tested name="iST_Dc_r" fraction.positive="1"/>
+          <TB.state.tested name="iST_Tc"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,comp_st"/> 
+        </test>
+        <test name="icomp_rt">
+          <TB.state.tested name="iRT_S"    fraction.positive="1"/>
+          <TB.state.tested name="iRT_C"    fraction.positive="1"/>
+          <TB.state.tested name="iRT_R"    fraction.positive="1"/>
+          <TB.state.tested name="iRT_I_s"  fraction.positive="1"/>
+          <TB.state.tested name="iRT_I_r"  fraction.positive="1"/>
+          <TB.state.tested name="iRT_Dn_s" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Dn_r" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Ds_s" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Ds_r" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Dc_s" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Dc_r" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Tc"   fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,comp_rt"/>
+        </test>
+
+        <!--INTERVENTION - TREATMENT SUCCESS--> 
+        <test name="isucc_stI">
+          <TB.state.tested name="iST_I_s"  fraction.positive="1"/>
+          <TB.state.tested name="iST_I_r"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_stI"/> 
+        </test>
+        <test name="isucc_rtI">
+          <TB.state.tested name="iRT_I_s"  fraction.positive="1"/>
+          <TB.state.tested name="iRT_I_r"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_rtI"/>  
+        </test>
+        <test name="isucc_stDn">
+          <TB.state.tested name="iST_Dn_s" fraction.positive="(1-mort_age)"/>
+          <TB.state.tested name="iST_Dn_r" fraction.positive="(1-mort_age)"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,(1+succ_stDn)/2"/>
+        </test>
+        <test name="isucc_stDn_age">
+          <TB.state.tested name="iST_Dn_s" fraction.positive="mort_age"/>
+          <TB.state.tested name="iST_Dn_r" fraction.positive="mort_age"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_stDn"/>
+        </test>
+        <test name="isucc_rtDn">
+          <TB.state.tested name="iRT_Dn_s" fraction.positive="(1-mort_age)"/>
+          <TB.state.tested name="iRT_Dn_r" fraction.positive="(1-mort_age)"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,(1+succ_rtDn)/2"/>
+        </test>
+        <test name="isucc_rtDn_age">
+          <TB.state.tested name="iRT_Dn_s" fraction.positive="mort_age"/>
+          <TB.state.tested name="iRT_Dn_r" fraction.positive="mort_age"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_rtDn"/>   
+        </test>
+        <test name="isucc_stDs">
+          <TB.state.tested name="iST_Ds_s" fraction.positive="1"/>
+          <TB.state.tested name="iST_Ds_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_stDs"/>   
+        </test>
+        <test name="isucc_rtDs">
+          <TB.state.tested name="iRT_Ds_s" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Ds_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_rtDs"/> 
+        </test>
+        <test name="isucc_stDc">
+          <TB.state.tested name="iST_Dc_s" fraction.positive="1"/>
+          <TB.state.tested name="iST_Dc_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_stDc"/>  
+        </test>
+        <test name="isucc_rtDc">
+          <TB.state.tested name="iRT_Dc_s" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Dc_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_rtDc"/>   
+        </test>
+
+        <!--INTERVENTION - RELATIVE TREATMENT SUCCESS--> 
+        <test name="isucc_strs">
+          <TB.state.tested name="iST_I_r"  fraction.positive="1"/>
+          <TB.state.tested name="iST_Dn_r" fraction.positive="1"/>
+          <TB.state.tested name="iST_Ds_r" fraction.positive="1"/>
+          <TB.state.tested name="iST_Dc_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,succ_strs"/>  
+        </test>
+
+        <!--INTERVENTION - ON TREATMENT MORTALITY: NON-INFECTIOUS TB--> 
+        <test name="imort_stDn">
+          <TB.state.tested name="iST_Dn_s" fraction.positive="mort_age"/>
+          <TB.state.tested name="iST_Dn_r" fraction.positive="mort_age"/>
+          <multiplier name="mult" times="1900,2025" values="0,0"/>   
+        </test>
+        <test name="imort_rtDn">
+          <TB.state.tested name="iRT_Dn_s" fraction.positive="mort_age"/>
+          <TB.state.tested name="iRT_Dn_r" fraction.positive="mort_age"/>
+          <multiplier name="mult" times="1900,2025" values="0,0"/>   
+        </test>
+
+        <!--INTERVENTION - ON TREATMENT MORTALITY: CLINICAL TB--> 
+        <test name="imort_stDc">
+          <TB.state.tested name="iST_Dc_s" fraction.positive="1"/>
+          <TB.state.tested name="iST_Dc_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0"/>   
+        </test>
+        <test name="imort_rtDc">
+          <TB.state.tested name="iRT_Dc_s" fraction.positive="1"/>
+          <TB.state.tested name="iRT_Dc_r" fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,0"/>  
+        </test>
+
+        <!--INTERVENTION - RELAPSE: NON-INFECTIOUS TB--> 
+        <test name="irelnon_s">
+          <TB.state.tested name="iTr_s_P"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,relnon_s"/>  
+        </test>
+        <test name="irelnon_r">
+          <TB.state.tested name="iTr_r_P"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,relnon_r"/>   
+        </test>
+
+        <!--INTERVENTION - RELAPSE: SUBCLINICAL TB--> 
+        <test name="irelsub_s">
+          <TB.state.tested name="iTr_s_P"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,relsub_s"/>   
+        </test>
+        <test name="irelsub_r">
+          <TB.state.tested name="iTr_r_P"  fraction.positive="1"/>
+          <multiplier name="mult" times="1900,2024.99,2025" values="0,0,relsub_r"/>    
+        </test>
+
+        <!--BUSINESS-AS-USUAL - RELATIVE TREATMENT INITIATION ACROSS TB STATES-->  
+        <compound.test name="relinit"    expression="access*testpos*accept"/>
+
+        <!--BUSINESS-AS-USUAL - RELATIVE DIAGNOSIS ACROSS TB STATES-->  
+        <compound.test name="reldiag"    expression="access*testpos"/>
+
+        <!--BUSINESS-AS-USUAL - RELATIVE TESTING ACROSS TB STATES-->  
+        <compound.test name="reltest"    expression="access"/>
+
+        <!--INTERVENTION - ON STANDARD TREATMENT: NO DST OR NEGATIVE DST-->
+        <compound.test name="irelinit_ST" expression="((1-(idst_n+idst_p))+(idst_n+idst_p)*(1-(idst_s+idst_r)))
+	                                                     *(iaccess_SCRI_N+iaccess_Dn_N+iaccess_Ds_N+iaccess_Dc_N+iaccess_SCR_P+iaccess_I_P+iaccess_Dn_P+iaccess_Ds_P+iaccess_Dc_P+iaccess_Tc_P)
+                                                       *(itestpos_SC+itestpos_R+itestpos_I+itestpos_Dn+itestpos_Ds+itestpos_Dc+itestpos_Tc)
+                                                       *(iaccept_low+iaccept_med+iaccept_high)"/>
+
+        <!--INTERVENTION - ON RESISTANT TREATMENT: POSITIVE DST-->
+	      <compound.test name="irelinit_RT" expression="(idst_n+idst_p)*(idst_s+idst_r)
+	                                                     *(iaccess_SCRI_N+iaccess_Dn_N+iaccess_Ds_N+iaccess_Dc_N+iaccess_SCR_P+iaccess_I_P+iaccess_Dn_P+iaccess_Ds_P+iaccess_Dc_P+iaccess_Tc_P)
+                                                       *(itestpos_SC+itestpos_R+itestpos_I+itestpos_Dn+itestpos_Ds+itestpos_Dc+itestpos_Tc)
+                                                       *(iaccept_low+iaccept_med+iaccept_high)"/>
+
+        <!--INTERVENTION - TREATMENT START-->
+	      <compound.test name="irelinit" expression="(iaccess_SCRI_N+iaccess_Dn_N+iaccess_Ds_N+iaccess_Dc_N+iaccess_SCR_P+iaccess_I_P+iaccess_Dn_P+iaccess_Ds_P+iaccess_Dc_P+iaccess_Tc_P)
+                                                    *(itestpos_SC+itestpos_R+itestpos_I+itestpos_Dn+itestpos_Ds+itestpos_Dc+itestpos_Tc)
+                                                    *(iaccept_low+iaccept_med+iaccept_high)"/>
+        
+        <!--INTERVENTION - DIAGNOSIS-->
+	      <compound.test name="ireldiag" expression="(iaccess_SCRI_N+iaccess_Dn_N+iaccess_Ds_N+iaccess_Dc_N+iaccess_SCR_P+iaccess_I_P+iaccess_Dn_P+iaccess_Ds_P+iaccess_Dc_P+iaccess_Tc_P)
+                                                    *(itestpos_SC+itestpos_R+itestpos_I+itestpos_Dn+itestpos_Ds+itestpos_Dc+itestpos_Tc)"/>
+        
+        <!--INTERVENTION - TESTING-->
+	      <compound.test name="ireltest" expression="(iaccess_SCRI_N+iaccess_Dn_N+iaccess_Ds_N+iaccess_Dc_N+iaccess_SCR_P+iaccess_I_P+iaccess_Dn_P+iaccess_Ds_P+iaccess_Dc_P+iaccess_Tc_P)"/>
+        
+        <!--INTERVENTION - NUMBER OF POSITIVE CXR THAT ARE GOING TO GET TESTED WITH XPERT-->
+	      <compound.test name="ireltest_XPERT" expression="(iaccess_SCRI_N+iaccess_Dn_N+iaccess_Ds_N+iaccess_Dc_N+iaccess_SCR_P+iaccess_I_P+iaccess_Dn_P+iaccess_Ds_P+iaccess_Dc_P+iaccess_Tc_P)
+                                                          *(itestpos_SC_CXR+itestpos_R_CXR+itestpos_I_CXR+itestpos_Dn_CXR+itestpos_Ds_CXR+itestpos_Dc_CXR+itestpos_Tc_CXR)"/>
+
+        <!--INTERVENTION - TREATMENT DURATION--> 
+        <compound.test name="icomp" expression="(icomp_st+icomp_rt)"/>
+
+        <!--INTERVENTION - SUCCESSFUL TREATMENT--> 
+        <compound.test name="isucc" expression="(icomp_st+icomp_rt)
+                                                *(1-(imort_stDn+imort_rtDn+imort_stDc+imort_rtDc))
+                                                *(isucc_stI+isucc_rtI+isucc_stDn+isucc_stDn_age+isucc_rtDn+isucc_rtDn_age+isucc_stDs+isucc_rtDs+isucc_stDc+isucc_rtDc)"/>
+
+        <!--INTERVENTION - SUCCESSFUL TREATMENT: RESISTANT STRAIN ON STANDARD TREATMENT--> 
+        <compound.test name="isucc_rs" expression="(icomp_st+icomp_rt)
+                                                   *(1-(imort_stDn+imort_rtDn+imort_stDc+imort_rtDc)) 
+                                                   *(isucc_stI+isucc_rtI+isucc_stDn+isucc_stDn_age+isucc_rtDn+isucc_rtDn_age+isucc_stDs+isucc_rtDs+isucc_stDc+isucc_rtDc)
+                                                   *(isucc_strs)"/>
+
+        <!--INTERVENTION - UNSUCCESSFUL TREATMENT: INFECTION AND SUBCLINICAL DISEASE--> 
+        <compound.test name="iunsucc" expression="(icomp_st+icomp_rt)
+                                                  *(1-(isucc_stI+isucc_rtI+isucc_stDs+isucc_rtDs))"/>
+
+        <!--INTERVENTION - UNSUCCESSFUL TREATMENT: RESISTANT STRAIN ON STANDARD TREATMENT FOR INFECTION AND SUBCLINICAL DISEASE--> 
+        <compound.test name="iunsucc_rs" expression="(icomp_st+icomp_rt)
+                                                     *(1-(isucc_stI+isucc_rtI+isucc_stDs+isucc_rtDs)
+                                                     *(isucc_strs))"/>
+
+        <!--INTERVENTION - UNSUCCESSFUL TREATMENT: ON TREATMENT MORTALITY FOR NON-INFECTIOUS AND CLINICAL DISEASE--> 
+        <compound.test name="iunsucc_mort" expression="(icomp_st+icomp_rt)
+                                                       *(1-(imort_stDn+imort_rtDn+imort_stDc+imort_rtDc))
+                                                       *(1-(isucc_stDn+isucc_stDn_age+isucc_rtDn+isucc_rtDn_age+isucc_stDc+isucc_rtDc))"/>
+
+        <!--INTERVENTION - UNSUCCESSFUL TREATMENT: RESISTANT STRAIN ON TREATMENT MORTALITY FOR NON-INFECTIOUS AND CLINICAL DISEASE--> 
+        <compound.test name="iunsucc_mort_rs" expression="(icomp_st+icomp_rt)
+                                                          *(1-(imort_stDn+imort_rtDn+imort_stDc+imort_rtDc))
+                                                          *(1-((isucc_stDn+isucc_stDn_age+isucc_rtDn+isucc_rtDn_age+isucc_stDc+isucc_rtDc)
+                                                          *isucc_strs))"/>
+
+        <!--INTERVENTION - ON TREATMENT MORTALITY--> 
+        <compound.test name="imort" expression="(icomp_st+icomp_rt)
+                                                *(imort_stDn+imort_rtDn+imort_stDc+imort_rtDc)"/>  
+
+        <!--INTERVENTION - RELAPSE: NON-INFECTIOUS SUSCEPTIBLE STRAIN--> 
+        <compound.test name="irelap_non_s" expression="(irelnon_s)"/>  
+
+        <!--INTERVENTION - RELAPSE: NON-INFECTIOUS RESISTANT STRAIN--> 
+        <compound.test name="irelap_non_r" expression="(irelnon_r)"/>  
+
+        <!--INTERVENTION - RELAPSE: SUBCLINICAL SUSCEPTIBLE STRAIN--> 
+        <compound.test name="irelap_sub_s" expression="(irelsub_s)"/>  
+
+        <!--INTERVENTION - RELAPSE: SUBCLINICAL RESISTANT STRAIN--> 
+        <compound.test name="irelap_sub_r" expression="(irelsub_r)"/>  
+
+      </tests>
+
+      <constant.transition.matrix> 
+        <!--NATURAL HISTORY: NEVER TREATED-->
+        <transition from="I_s_N"       to="C_N"            rate="infclr"/>
+        <transition from="I_r_N"       to="C_N"            rate="infclr"/>
+        <transition from="I_s_N"       to="Dn_s_N"         rate="infnon*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="I_r_N"       to="Dn_r_N"         rate="infnon*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="I_s_N"       to="Ds_s_N"         rate="infsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="I_r_N"       to="Ds_r_N"         rate="infsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Dn_s_N"      to="R_N"            rate="nonrec*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+        <transition from="Dn_r_N"      to="R_N"            rate="nonrec*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+        <transition from="Dn_s_N"      to="Ds_s_N"         rate="nonsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Dn_r_N"      to="Ds_r_N"         rate="nonsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Ds_s_N"      to="Dn_s_N"         rate="subnon*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/> 
+        <transition from="Ds_r_N"      to="Dn_r_N"         rate="subnon*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/> 
+        <transition from="Ds_s_N"      to="Dc_s_N"         rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>    
+        <transition from="Ds_r_N"      to="Dc_r_N"         rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>    
+        <transition from="Dc_s_N"      to="Ds_s_N"         rate="clinsub*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+        <transition from="Dc_r_N"      to="Ds_r_N"         rate="clinsub*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+
+        <!--NATURAL HISTORY: PREVIOUSLY TREATED-->
+        <transition from="I_s_P"       to="C_P"            rate="infclr"/>
+        <transition from="I_r_P"       to="C_P"            rate="infclr"/>
+        <transition from="I_s_P"       to="Dn_s_P"         rate="infnon*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>     
+        <transition from="I_r_P"       to="Dn_r_P"         rate="infnon*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>     
+        <transition from="I_s_P"       to="Ds_s_P"         rate="infsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>     
+        <transition from="I_r_P"       to="Ds_r_P"         rate="infsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>     
+        <transition from="Dn_s_P"      to="R_P"            rate="nonrec*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+        <transition from="Dn_r_P"      to="R_P"            rate="nonrec*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+        <transition from="Dn_s_P"      to="Ds_s_P"         rate="nonsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>     
+        <transition from="Dn_r_P"      to="Ds_r_P"         rate="nonsub*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>     
+        <transition from="Ds_s_P"      to="Dn_s_P"         rate="subnon*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/> 
+        <transition from="Ds_r_P"      to="Dn_r_P"         rate="subnon*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/> 
+        <transition from="Ds_s_P"      to="Dc_s_P"         rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>    
+        <transition from="Ds_r_P"      to="Dc_r_P"         rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/>    
+        <transition from="Dc_s_P"      to="Ds_s_P"         rate="clinsub*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+        <transition from="Dc_r_P"      to="Ds_r_P"         rate="clinsub*(1/prog_age)*(1/(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri))"/>
+
+        <!--BUSINESS-AS-USUAL TREATMENT: SUSCEPTIBLE, CLEARED, RECOVERED, TREATED-->
+        <transition from="ST_S"        to="S_P"                 rate="comp_st"/>
+        <transition from="RT_S"        to="S_P"                 rate="comp_rt"/>
+        <transition from="ST_C"        to="C_P"                 rate="comp_st"/>
+        <transition from="RT_C"        to="C_P"                 rate="comp_rt"/>
+        <transition from="ST_R"        to="R_P"                 rate="comp_st"/>
+        <transition from="RT_R"        to="R_P"                 rate="comp_rt"/>
+        <transition from="ST_Tc"       to="Tc_P"                rate="comp_st"/>
+        <transition from="RT_Tc"       to="Tc_P"                rate="comp_rt"/>
+
+        <!--BUSINESS-AS-USUAL TREATMENT: INFECTED-->
+        <transition from="ST_I_s"      to="C_P"                 rate="comp_st*succ_stI"/>
+        <transition from="ST_I_r"      to="C_P"                 rate="comp_st*succ_stI*succ_strs"/>
+        <transition from="RT_I_s"      to="C_P"                 rate="comp_rt*succ_rtI"/>
+        <transition from="RT_I_r"      to="C_P"                 rate="comp_rt*succ_rtI"/>
+        <transition from="ST_I_s"      to="I_s_P"               rate="comp_st*(1-succ_stI)"/>
+        <transition from="ST_I_r"      to="I_r_P"               rate="comp_st*(1-succ_stI*succ_strs)"/>
+        <transition from="RT_I_s"      to="I_s_P"               rate="comp_rt*(1-succ_rtI)"/>
+        <transition from="RT_I_r"      to="I_r_P"               rate="comp_rt*(1-succ_rtI)"/>
+
+        <!--BUSINESS-AS-USUAL TREATMENT: NON-INFECTIOUS TB-->
+        <transition from="ST_Dn_s"     to="R_P"                 rate="comp_st*(((1-mort_stDn)*mort_age*succ_stDn)+((1-mort_age)*(1+succ_stDn)/2))"/>
+        <transition from="ST_Dn_r"     to="R_P"                 rate="comp_st*(((1-mort_stDn)*mort_age*succ_stDn*succ_strs)+((1-mort_age)*(((1+succ_stDn)/2)*succ_strs)))"/>
+        <transition from="RT_Dn_s"     to="R_P"                 rate="comp_rt*(((1-mort_rtDn)*mort_age*succ_rtDn)+((1-mort_age)*(1+succ_rtDn)/2))"/>
+        <transition from="RT_Dn_r"     to="R_P"                 rate="comp_rt*(((1-mort_rtDn)*mort_age*succ_rtDn)+((1-mort_age)*(1+succ_rtDn)/2))"/>
+        <transition from="ST_Dn_s"     to="ST_Dn_s_dead"        rate="comp_st*mort_stDn*mort_age"/>
+        <transition from="ST_Dn_r"     to="ST_Dn_r_dead"        rate="comp_st*mort_stDn*mort_age"/>
+        <transition from="RT_Dn_s"     to="RT_Dn_s_dead"        rate="comp_rt*mort_rtDn*mort_age"/>
+        <transition from="RT_Dn_r"     to="RT_Dn_r_dead"        rate="comp_rt*mort_rtDn*mort_age"/>
+        <transition from="ST_Dn_s"     to="Dn_s_P"              rate="comp_st*(((1-mort_stDn)*mort_age*(1-succ_stDn))+((1-mort_age)*(1-((1+succ_stDn)/2))))"/>
+        <transition from="ST_Dn_r"     to="Dn_r_P"              rate="comp_st*(((1-mort_stDn)*mort_age*((1-succ_stDn)*succ_strs))+((1-mort_age)*(1-(((1+succ_stDn)/2)*succ_strs))))"/>
+        <transition from="RT_Dn_s"     to="Dn_s_P"              rate="comp_rt*(((1-mort_rtDn)*mort_age*(1-succ_rtDn))+((1-mort_age)*(1-((1+succ_rtDn)/2))))"/>
+        <transition from="RT_Dn_r"     to="Dn_r_P"              rate="comp_rt*(((1-mort_rtDn)*mort_age*(1-succ_rtDn))+((1-mort_age)*(1-((1+succ_rtDn)/2))))"/>  
+        
+        <!--BUSINESS-AS-USUAL TREATMENT: SUBCLINICAL TB-->
+        <transition from="ST_Ds_s"     to="Tr_s_P"              rate="comp_st*succ_stDs"/>
+        <transition from="ST_Ds_r"     to="Tr_r_P"              rate="comp_st*succ_stDs*succ_strs"/>
+        <transition from="RT_Ds_s"     to="Tr_s_P"              rate="comp_rt*succ_rtDs"/>
+        <transition from="RT_Ds_r"     to="Tr_r_P"              rate="comp_rt*succ_rtDs"/>
+        <transition from="ST_Ds_s"     to="Ds_s_P"              rate="comp_st*(1-succ_stDs)"/>
+        <transition from="ST_Ds_r"     to="Ds_r_P"              rate="comp_st*(1-succ_stDs*succ_strs)"/>
+        <transition from="RT_Ds_s"     to="Ds_s_P"              rate="comp_rt*(1-succ_rtDs)"/>
+        <transition from="RT_Ds_r"     to="Ds_r_P"              rate="comp_rt*(1-succ_rtDs)"/>    
+
+        <!--BUSINESS-AS-USUAL TREATMENT: CLINICAL TB-->
+        <transition from="ST_Dc_s"     to="Tr_s_P"              rate="comp_st*(1-mort_stDc)*succ_stDc"/>
+        <transition from="ST_Dc_r"     to="Tr_r_P"              rate="comp_st*(1-mort_stDc)*succ_stDc*succ_strs"/>
+        <transition from="RT_Dc_s"     to="Tr_s_P"              rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>
+        <transition from="RT_Dc_r"     to="Tr_r_P"              rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>   
+        <transition from="ST_Dc_s"     to="ST_Dc_s_dead"        rate="comp_st*mort_stDc"/>
+        <transition from="ST_Dc_r"     to="ST_Dc_r_dead"        rate="comp_st*mort_stDc"/>
+        <transition from="RT_Dc_s"     to="RT_Dc_s_dead"        rate="comp_rt*mort_rtDc"/>
+        <transition from="RT_Dc_r"     to="RT_Dc_r_dead"        rate="comp_rt*mort_rtDc"/>
+        <transition from="ST_Dc_s"     to="Dc_s_P"              rate="comp_st*(1-mort_stDc)*(1-succ_stDc)"/>
+        <transition from="ST_Dc_r"     to="Dc_r_P"              rate="comp_st*(1-mort_stDc)*(1-(succ_stDc*succ_strs))"/>
+        <transition from="RT_Dc_s"     to="Dc_s_P"              rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>
+        <transition from="RT_Dc_r"     to="Dc_r_P"              rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>
+
+        <!--BUSINESS-AS-USUAL TREATED-->
+        <transition from="Tr_s_P"      to="Tc_P"                rate="trtot"/>
+        <transition from="Tr_r_P"      to="Tc_P"                rate="trtot"/>
+
+        <!--INTERVENTION TREATED-->
+        <transition from="iTr_s_P"     to="Tc_P"                rate="trtot"/>
+        <transition from="iTr_r_P"     to="Tc_P"                rate="trtot"/>
+         
+        <!--BUSINESS-AS-USUAL RELAPSE-->                 
+        <transition from="Tr_s_P"      to="Dn_s_P"              rate="relnon_s"/>
+        <transition from="Tr_s_P"      to="Ds_s_P"              rate="relsub_s"/>
+        <transition from="Tr_r_P"      to="Dn_r_P"              rate="relnon_r"/>
+        <transition from="Tr_r_P"      to="Ds_r_P"              rate="relsub_r"/>
+
+        <!--BUSINESS-AS-USUAL RESISTANCE ACQUISITION-->
+        <transition from="ST_I_s"      to="ST_I_r"              rate="acqres"/>
+        <transition from="ST_Dn_s"     to="ST_Dn_r"             rate="acqres"/>
+        <transition from="ST_Ds_s"     to="ST_Ds_r"             rate="acqres"/>
+        <transition from="ST_Dc_s"     to="ST_Dc_r"             rate="acqres"/>
+
+        <!--INTERVENTION RESISTANCE ACQUISITION-->
+        <transition from="iST_I_s"     to="iST_I_r"             rate="acqres"/>
+        <transition from="iST_Dn_s"    to="iST_Dn_r"            rate="acqres"/>
+        <transition from="iST_Ds_s"    to="iST_Ds_r"            rate="acqres"/>
+        <transition from="iST_Dc_s"    to="iST_Dc_r"            rate="acqres"/>
+
+        <!--MORTALITY-->
+        <transition from="Dn_s_N"      to="Dn_s_dead"           rate="muDn*mort_age"/> 
+        <transition from="Dn_r_N"      to="Dn_r_dead"           rate="muDn*mort_age"/> 
+        <transition from="Dc_s_N"      to="Dc_s_dead"           rate="muDc"/> 
+        <transition from="Dc_r_N"      to="Dc_r_dead"           rate="muDc"/> 
+        <transition from="Dn_s_P"      to="Dn_s_dead"           rate="muDn*mort_age"/> 
+        <transition from="Dn_r_P"      to="Dn_r_dead"           rate="muDn*mort_age"/> 
+        <transition from="Dc_s_P"      to="Dc_s_dead"           rate="muDc"/> 
+        <transition from="Dc_r_P"      to="Dc_r_dead"           rate="muDc"/> 
+        
+        <!--CORE CALIBRATION/TESTING COMPARTMENTS-->
+        <transition from="Ds_s_N"      to="Inc_Dc_count"        rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Ds_r_N"      to="Inc_Dc_count"        rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Ds_s_P"      to="Inc_Dc_count"        rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Ds_r_P"      to="Inc_Dc_count"        rate="subclin*prog_age*(prog_not_inprison+inprison*prog_inprison*prog_contRate_pri)"/> 
+        <transition from="Tr_s_P"      to="Dn_s_count"          rate="relnon_s"/>
+        <transition from="Tr_r_P"      to="Dn_r_count"          rate="relnon_r"/>
+        <transition from="Tr_s_P"      to="Ds_s_count"          rate="relsub_s"/>
+        <transition from="Tr_r_P"      to="Ds_r_count"          rate="relsub_r"/>
+        <!--ST_succ_count-->
+        <transition from="ST_S"        to="ST_succ_count"       rate="comp_st"/> 
+        <transition from="RT_S"        to="RT_succ_count"       rate="comp_rt"/> 
+        <transition from="ST_C"        to="ST_succ_count"       rate="comp_st"/> 
+        <transition from="RT_C"        to="RT_succ_count"       rate="comp_rt"/> 
+        <transition from="ST_R"        to="ST_succ_count"       rate="comp_st"/> 
+        <transition from="RT_R"        to="RT_succ_count"       rate="comp_rt"/> 
+        <transition from="ST_Tc"       to="ST_succ_count"       rate="comp_st"/> 
+        <transition from="RT_Tc"       to="RT_succ_count"       rate="comp_rt"/> 
+        <transition from="ST_I_s"      to="ST_succ_count"       rate="comp_st*succ_stI"/>           
+        <transition from="ST_I_r"      to="ST_succ_count"       rate="comp_st*succ_stI*succ_strs"/> 
+        <transition from="RT_I_s"      to="RT_succ_count"       rate="comp_rt*succ_rtI"/>           
+        <transition from="RT_I_r"      to="RT_succ_count"       rate="comp_rt*succ_rtI"/>    
+        <!--ST_X_succ_count-->
+        <transition from="ST_S"        to="ST_S_succ_count"     rate="comp_st"/> 
+        <transition from="RT_S"        to="RT_S_succ_count"     rate="comp_rt"/> 
+        <transition from="ST_C"        to="ST_C_succ_count"     rate="comp_st"/> 
+        <transition from="RT_C"        to="RT_C_succ_count"     rate="comp_rt"/> 
+        <transition from="ST_R"        to="ST_R_succ_count"     rate="comp_st"/> 
+        <transition from="RT_R"        to="RT_R_succ_count"     rate="comp_rt"/> 
+        <transition from="ST_Tc"       to="ST_Tc_succ_count"    rate="comp_st"/> 
+        <transition from="RT_Tc"       to="RT_Tc_succ_count"    rate="comp_rt"/> 
+        <transition from="ST_I_s"      to="ST_I_succ_count"     rate="comp_st*succ_stI"/>           
+        <transition from="ST_I_r"      to="ST_I_succ_count"     rate="comp_st*succ_stI*succ_strs"/> 
+        <transition from="RT_I_s"      to="RT_I_succ_count"     rate="comp_rt*succ_rtI"/>           
+        <transition from="RT_I_r"      to="RT_I_succ_count"     rate="comp_rt*succ_rtI"/>    
+        <!--ST_unsucc_count-->
+        <transition from="ST_I_s"      to="ST_unsucc_count"     rate="comp_st*(1-succ_stI)"/>           
+        <transition from="ST_I_r"      to="ST_unsucc_count"     rate="comp_st*(1-succ_stI*succ_strs)"/> 
+        <transition from="RT_I_s"      to="RT_unsucc_count"     rate="comp_rt*(1-succ_rtI)"/>           
+        <transition from="RT_I_r"      to="RT_unsucc_count"     rate="comp_rt*(1-succ_rtI)"/>       
+        <!--ST_X_unsucc_count-->
+        <transition from="ST_I_s"      to="ST_I_unsucc_count"   rate="comp_st*(1-succ_stI)"/>           
+        <transition from="ST_I_r"      to="ST_I_unsucc_count"   rate="comp_st*(1-succ_stI*succ_strs)"/> 
+        <transition from="RT_I_s"      to="RT_I_unsucc_count"   rate="comp_rt*(1-succ_rtI)"/>           
+        <transition from="RT_I_r"      to="RT_I_unsucc_count"   rate="comp_rt*(1-succ_rtI)"/>    
+        <!--ST_succ_count-->
+        <transition from="ST_Dn_s"     to="ST_succ_count"       rate="comp_st*(((1-mort_stDn)*mort_age*succ_stDn)+((1-mort_age)*(1+succ_stDn)/2))"/>           
+        <transition from="ST_Dn_r"     to="ST_succ_count"       rate="comp_st*(((1-mort_stDn)*mort_age*succ_stDn*succ_strs)+((1-mort_age)*(((1+succ_stDn)/2)*succ_strs)))"/> 
+        <transition from="RT_Dn_s"     to="RT_succ_count"       rate="comp_rt*(((1-mort_rtDn)*mort_age*succ_rtDn)+((1-mort_age)*(1+succ_rtDn)/2))"/>           
+        <transition from="RT_Dn_r"     to="RT_succ_count"       rate="comp_rt*(((1-mort_rtDn)*mort_age*succ_rtDn)+((1-mort_age)*(1+succ_rtDn)/2))"/>     
+        <!--ST_X_succ_count--> 
+        <transition from="ST_Dn_s"     to="ST_Dn_succ_count"    rate="comp_st*(((1-mort_stDn)*mort_age*succ_stDn)+((1-mort_age)*(1+succ_stDn)/2))"/>           
+        <transition from="ST_Dn_r"     to="ST_Dn_succ_count"    rate="comp_st*(((1-mort_stDn)*mort_age*succ_stDn*succ_strs)+((1-mort_age)*(((1+succ_stDn)/2)*succ_strs)))"/> 
+        <transition from="RT_Dn_s"     to="RT_Dn_succ_count"    rate="comp_rt*(((1-mort_rtDn)*mort_age*succ_rtDn)+((1-mort_age)*(1+succ_rtDn)/2))"/>           
+        <transition from="RT_Dn_r"     to="RT_Dn_succ_count"    rate="comp_rt*(((1-mort_rtDn)*mort_age*succ_rtDn)+((1-mort_age)*(1+succ_rtDn)/2))"/>    
+        <!--ST_unsucc_count-->
+        <transition from="ST_Dn_s"     to="ST_unsucc_count"     rate="comp_st*(((1-mort_stDn)*mort_age*(1-succ_stDn))+((1-mort_age)*(1-((1+succ_stDn)/2))))"/>           
+        <transition from="ST_Dn_r"     to="ST_unsucc_count"     rate="comp_st*(((1-mort_stDn)*mort_age*((1-succ_stDn)*succ_strs))+((1-mort_age)*(1-(((1+succ_stDn)/2)*succ_strs))))"/> 
+        <transition from="RT_Dn_s"     to="RT_unsucc_count"     rate="comp_rt*(((1-mort_rtDn)*mort_age*(1-succ_rtDn))+((1-mort_age)*(1-((1+succ_rtDn)/2))))"/>           
+        <transition from="RT_Dn_r"     to="RT_unsucc_count"     rate="comp_rt*(((1-mort_rtDn)*mort_age*(1-succ_rtDn))+((1-mort_age)*(1-((1+succ_rtDn)/2))))"/>   
+        <!--ST_X_unsucc_count--> 
+        <transition from="ST_Dn_s"     to="ST_Dn_unsucc_count"  rate="comp_st*(((1-mort_stDn)*mort_age*(1-succ_stDn))+((1-mort_age)*(1-((1+succ_stDn)/2))))"/>           
+        <transition from="ST_Dn_r"     to="ST_Dn_unsucc_count"  rate="comp_st*(((1-mort_stDn)*mort_age*((1-succ_stDn)*succ_strs))+((1-mort_age)*(1-(((1+succ_stDn)/2)*succ_strs))))"/> 
+        <transition from="RT_Dn_s"     to="RT_Dn_unsucc_count"  rate="comp_rt*(((1-mort_rtDn)*mort_age*(1-succ_rtDn))+((1-mort_age)*(1-((1+succ_rtDn)/2))))"/>           
+        <transition from="RT_Dn_r"     to="RT_Dn_unsucc_count"  rate="comp_rt*(((1-mort_rtDn)*mort_age*(1-succ_rtDn))+((1-mort_age)*(1-((1+succ_rtDn)/2))))"/>   
+        <!--ST_succ_count-->
+        <transition from="ST_Ds_s"     to="ST_succ_count"       rate="comp_st*succ_stDs"/>            
+        <transition from="ST_Ds_r"     to="ST_succ_count"       rate="comp_st*succ_stDs*succ_strs"/>  
+        <transition from="RT_Ds_s"     to="RT_succ_count"       rate="comp_rt*succ_rtDs"/>            
+        <transition from="RT_Ds_r"     to="RT_succ_count"       rate="comp_rt*succ_rtDs"/> 
+        <!--ST_unsucc_count-->
+        <transition from="ST_Ds_s"     to="ST_Ds_succ_count"    rate="comp_st*succ_stDs"/>            
+        <transition from="ST_Ds_r"     to="ST_Ds_succ_count"    rate="comp_st*succ_stDs*succ_strs"/>  
+        <transition from="RT_Ds_s"     to="RT_Ds_succ_count"    rate="comp_rt*succ_rtDs"/>            
+        <transition from="RT_Ds_r"     to="RT_Ds_succ_count"    rate="comp_rt*succ_rtDs"/> 
+        <!--ST_unsucc_count-->
+        <transition from="ST_Ds_s"     to="ST_unsucc_count"     rate="comp_st*(1-succ_stDs)"/>            
+        <transition from="ST_Ds_r"     to="ST_unsucc_count"     rate="comp_st*(1-succ_stDs*succ_strs)"/>  
+        <transition from="RT_Ds_s"     to="RT_unsucc_count"     rate="comp_rt*(1-succ_rtDs)"/>            
+        <transition from="RT_Ds_r"     to="RT_unsucc_count"     rate="comp_rt*(1-succ_rtDs)"/> 
+        <!--ST_X_unsucc_count-->
+        <transition from="ST_Ds_s"     to="ST_Ds_unsucc_count"  rate="comp_st*(1-succ_stDs)"/>            
+        <transition from="ST_Ds_r"     to="ST_Ds_unsucc_count"  rate="comp_st*(1-succ_stDs*succ_strs)"/>  
+        <transition from="RT_Ds_s"     to="RT_Ds_unsucc_count"  rate="comp_rt*(1-succ_rtDs)"/>            
+        <transition from="RT_Ds_r"     to="RT_Ds_unsucc_count"  rate="comp_rt*(1-succ_rtDs)"/> 
+        <!--ST_succ_count-->
+        <transition from="ST_Dc_s"     to="ST_succ_count"       rate="comp_st*(1-mort_stDc)*succ_stDc"/>           
+        <transition from="ST_Dc_r"     to="ST_succ_count"       rate="comp_st*(1-mort_stDc)*succ_stDc*succ_strs"/> 
+        <transition from="RT_Dc_s"     to="RT_succ_count"       rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>           
+        <transition from="RT_Dc_r"     to="RT_succ_count"       rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/> 
+         <!--ST_X_succ_count-->
+        <transition from="ST_Dc_s"     to="ST_Dc_succ_count"    rate="comp_st*(1-mort_stDc)*succ_stDc"/>           
+        <transition from="ST_Dc_r"     to="ST_Dc_succ_count"    rate="comp_st*(1-mort_stDc)*succ_stDc*succ_strs"/> 
+        <transition from="RT_Dc_s"     to="RT_Dc_succ_count"    rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>           
+        <transition from="RT_Dc_r"     to="RT_Dc_succ_count"    rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>        
+        <!--ST_unsucc_count-->
+        <transition from="ST_Dc_s"     to="ST_unsucc_count"     rate="comp_st*(1-mort_stDc)*(1-succ_stDc)"/>            
+        <transition from="ST_Dc_r"     to="ST_unsucc_count"     rate="comp_st*(1-mort_stDc)*(1-(succ_stDc*succ_strs))"/>  
+        <transition from="RT_Dc_s"     to="RT_unsucc_count"     rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>            
+        <transition from="RT_Dc_r"     to="RT_unsucc_count"     rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>   
+        <!--ST_X_unsucc_count-->
+        <transition from="ST_Dc_s"     to="ST_Dc_unsucc_count"  rate="comp_st*(1-mort_stDc)*(1-succ_stDc)"/>            
+        <transition from="ST_Dc_r"     to="ST_Dc_unsucc_count"  rate="comp_st*(1-mort_stDc)*(1-(succ_stDc*succ_strs))"/>  
+        <transition from="RT_Dc_s"     to="RT_Dc_unsucc_count"  rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>            
+        <transition from="RT_Dc_r"     to="RT_Dc_unsucc_count"  rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>   
+        <!--OTHER COUNTS-->
+        <transition from="ST_Ds_s"     to="Tr_s_P_count"        rate="comp_st*succ_stDs"/>               
+        <transition from="ST_Ds_r"     to="Tr_r_P_count"        rate="comp_st*succ_stDs*succ_strs"/>     
+        <transition from="RT_Ds_s"     to="Tr_s_P_count"        rate="comp_rt*succ_rtDs"/>               
+        <transition from="RT_Ds_r"     to="Tr_r_P_count"        rate="comp_rt*succ_rtDs"/>               
+        <transition from="ST_Ds_s"     to="Ds_s_P_count"        rate="comp_st*(1-succ_stDs)"/>           
+        <transition from="ST_Ds_r"     to="Ds_r_P_count"        rate="comp_st*(1-succ_stDs*succ_strs)"/> 
+        <transition from="RT_Ds_s"     to="Ds_s_P_count"        rate="comp_rt*(1-succ_rtDs)"/>           
+        <transition from="RT_Ds_r"     to="Ds_r_P_count"        rate="comp_rt*(1-succ_rtDs)"/>           
+        <transition from="ST_Dc_s"     to="Tr_s_P_count"        rate="comp_st*(1-mort_stDc)*succ_stDc"/>               
+        <transition from="ST_Dc_r"     to="Tr_r_P_count"        rate="comp_st*(1-mort_stDc)*succ_stDc*succ_strs"/>     
+        <transition from="RT_Dc_s"     to="Tr_s_P_count"        rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>               
+        <transition from="RT_Dc_r"     to="Tr_r_P_count"        rate="comp_rt*(1-mort_rtDc)*succ_rtDc"/>               
+        <transition from="ST_Dc_s"     to="Dc_s_P_count"        rate="comp_st*(1-mort_stDc)*(1-succ_stDc)"/>           
+        <transition from="ST_Dc_r"     to="Dc_r_P_count"        rate="comp_st*(1-mort_stDc)*(1-(succ_stDc*succ_strs))"/> 
+        <transition from="RT_Dc_s"     to="Dc_s_P_count"        rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>           
+        <transition from="RT_Dc_r"     to="Dc_r_P_count"        rate="comp_rt*(1-mort_rtDc)*(1-succ_rtDc)"/>           
+
+      </constant.transition.matrix>
+
+      <transition.matrix name="init" after.test="relinit">
+        <!--BUSINESS-AS-USUAL - DIAGNOSIS: NEVER TREATED-->
+        <transition from="S_N"         to="ST_S"                rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="S_N"         to="RT_S"                rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="C_N"         to="ST_C"                rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="C_N"         to="RT_C"                rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="R_N"         to="ST_R"                rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="R_N"         to="RT_R"                rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="I_s_N"       to="ST_I_s"              rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="I_s_N"       to="RT_I_s"              rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="I_r_N"       to="ST_I_r"              rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="I_r_N"       to="RT_I_r"              rate="dst_n*dst_r*dx_age*eta"/>     
+        <transition from="Dn_s_N"      to="ST_Dn_s"             rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="Dn_s_N"      to="RT_Dn_s"             rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="Dn_r_N"      to="ST_Dn_r"             rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="Dn_r_N"      to="RT_Dn_r"             rate="dst_n*dst_r*dx_age*eta"/>     
+        <transition from="Ds_s_N"      to="ST_Ds_s"             rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="Ds_s_N"      to="RT_Ds_s"             rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="Ds_r_N"      to="ST_Ds_r"             rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="Ds_r_N"      to="RT_Ds_r"             rate="dst_n*dst_r*dx_age*eta"/>     
+        <transition from="Dc_s_N"      to="ST_Dc_s"             rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="Dc_s_N"      to="RT_Dc_s"             rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="Dc_r_N"      to="ST_Dc_r"             rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="Dc_r_N"      to="RT_Dc_r"             rate="dst_n*dst_r*dx_age*eta"/>   
+
+        <!--BUSINESS-AS-USUAL - DIAGNOSIS COUNT: NEVER TREATED-->
+        <transition from="S_N"         to="ST_S_N_count"        rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="S_N"         to="RT_S_N_count"        rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="C_N"         to="ST_C_N_count"        rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="C_N"         to="RT_C_N_count"        rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="R_N"         to="ST_R_N_count"        rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="R_N"         to="RT_R_N_count"        rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="I_s_N"       to="ST_I_s_N_count"      rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="I_s_N"       to="RT_I_s_N_count"      rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="I_r_N"       to="ST_I_r_N_count"      rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="I_r_N"       to="RT_I_r_N_count"      rate="dst_n*dst_r*dx_age*eta"/>     
+        <transition from="Dn_s_N"      to="ST_Dn_s_N_count"     rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="Dn_s_N"      to="RT_Dn_s_N_count"     rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="Dn_r_N"      to="ST_Dn_r_N_count"     rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="Dn_r_N"      to="RT_Dn_r_N_count"     rate="dst_n*dst_r*dx_age*eta"/>     
+        <transition from="Ds_s_N"      to="ST_Ds_s_N_count"     rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="Ds_s_N"      to="RT_Ds_s_N_count"     rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="Ds_r_N"      to="ST_Ds_r_N_count"     rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="Ds_r_N"      to="RT_Ds_r_N_count"     rate="dst_n*dst_r*dx_age*eta"/>     
+        <transition from="Dc_s_N"      to="ST_Dc_s_N_count"     rate="(1-dst_n*dst_s)*dx_age*eta"/> 
+        <transition from="Dc_s_N"      to="RT_Dc_s_N_count"     rate="dst_n*dst_s*dx_age*eta"/>     
+        <transition from="Dc_r_N"      to="ST_Dc_r_N_count"     rate="(1-dst_n*dst_r)*dx_age*eta"/> 
+        <transition from="Dc_r_N"      to="RT_Dc_r_N_count"     rate="dst_n*dst_r*dx_age*eta"/>       
+
+        <!--BUSINESS-AS-USUAL - DIAGNOSIS: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="ST_S"                rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="S_P"         to="RT_S"                rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="C_P"         to="ST_C"                rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="C_P"         to="RT_C"                rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="R_P"         to="ST_R"                rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="R_P"         to="RT_R"                rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Tc_P"        to="ST_Tc"               rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Tc_P"        to="RT_Tc"               rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="I_s_P"       to="ST_I_s"              rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="I_s_P"       to="RT_I_s"              rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="I_r_P"       to="ST_I_r"              rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="I_r_P"       to="RT_I_r"              rate="dst_p*dst_r*dx_age*eta"/>    
+        <transition from="Dn_s_P"      to="ST_Dn_s"             rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Dn_s_P"      to="RT_Dn_s"             rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Dn_r_P"      to="ST_Dn_r"             rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="Dn_r_P"      to="RT_Dn_r"             rate="dst_p*dst_r*dx_age*eta"/>    
+        <transition from="Ds_s_P"      to="ST_Ds_s"             rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Ds_s_P"      to="RT_Ds_s"             rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Ds_r_P"      to="ST_Ds_r"             rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="Ds_r_P"      to="RT_Ds_r"             rate="dst_p*dst_r*dx_age*eta"/>    
+        <transition from="Dc_s_P"      to="ST_Dc_s"             rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Dc_s_P"      to="RT_Dc_s"             rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Dc_r_P"      to="ST_Dc_r"             rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="Dc_r_P"      to="RT_Dc_r"             rate="dst_p*dst_r*dx_age*eta"/>  
+
+        <!--BUSINESS-AS-USUAL - DIAGNOSIS COUNT: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="ST_S_P_count"        rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="S_P"         to="RT_S_P_count"        rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="C_P"         to="ST_C_P_count"        rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="C_P"         to="RT_C_P_count"        rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="R_P"         to="ST_R_P_count"        rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="R_P"         to="RT_R_P_count"        rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Tc_P"        to="ST_Tc_P_count"       rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Tc_P"        to="RT_Tc_P_count"       rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="I_s_P"       to="ST_I_s_P_count"      rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="I_s_P"       to="RT_I_s_P_count"      rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="I_r_P"       to="ST_I_r_P_count"      rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="I_r_P"       to="RT_I_r_P_count"      rate="dst_p*dst_r*dx_age*eta"/>    
+        <transition from="Dn_s_P"      to="ST_Dn_s_P_count"     rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Dn_s_P"      to="RT_Dn_s_P_count"     rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Dn_r_P"      to="ST_Dn_r_P_count"     rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="Dn_r_P"      to="RT_Dn_r_P_count"     rate="dst_p*dst_r*dx_age*eta"/>    
+        <transition from="Ds_s_P"      to="ST_Ds_s_P_count"     rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Ds_s_P"      to="RT_Ds_s_P_count"     rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Ds_r_P"      to="ST_Ds_r_P_count"     rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="Ds_r_P"      to="RT_Ds_r_P_count"     rate="dst_p*dst_r*dx_age*eta"/>    
+        <transition from="Dc_s_P"      to="ST_Dc_s_P_count"     rate="(1-dst_p*dst_s)*dx_age*eta"/>
+        <transition from="Dc_s_P"      to="RT_Dc_s_P_count"     rate="dst_p*dst_s*dx_age*eta"/>    
+        <transition from="Dc_r_P"      to="ST_Dc_r_P_count"     rate="(1-dst_p*dst_r)*dx_age*eta"/>
+        <transition from="Dc_r_P"      to="RT_Dc_r_P_count"     rate="dst_p*dst_r*dx_age*eta"/>    
+
+        <!--BUSINESS-AS-USUAL - NOTIFICATIONS: NEVER TREATED-->
+        <transition from="S_N"         to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="C_N"         to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="R_N"         to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="I_s_N"       to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="I_r_N"       to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="Dn_s_N"      to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="Dn_r_N"      to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="Ds_s_N"      to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="Ds_r_N"      to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="Dc_s_N"      to="Not_N_count"         rate="dx_age*eta"/> 
+        <transition from="Dc_r_N"      to="Not_N_count"         rate="dx_age*eta"/> 
+                                                                                  
+        <!--BUSINESS-AS-USUAL - NOTIFICATIONS: PREVIOUSLY TREATED-->                                      
+        <transition from="S_P"         to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="C_P"         to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="R_P"         to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Tc_P"        to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="I_s_P"       to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="I_r_P"       to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Dn_s_P"      to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Dn_r_P"      to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Ds_s_P"      to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Ds_r_P"      to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Dc_s_P"      to="Not_P_count"         rate="dx_age*eta"/>
+        <transition from="Dc_r_P"      to="Not_P_count"         rate="dx_age*eta"/>
+        
+        <!--BUSINESS-AS-USUAL - DIAGNOSIS: NEVER TREATED-->
+        <transition from="S_N"         to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="C_N"         to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="R_N"         to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="I_s_N"       to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="I_r_N"       to="MDR_N_count"         rate="dst_n*dst_r*dx_age*eta"/>
+        <transition from="Dn_s_N"      to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="Dn_r_N"      to="MDR_N_count"         rate="dst_n*dst_r*dx_age*eta"/>
+        <transition from="Ds_s_N"      to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="Ds_r_N"      to="MDR_N_count"         rate="dst_n*dst_r*dx_age*eta"/>
+        <transition from="Dc_s_N"      to="MDR_N_count"         rate="dst_n*dst_s*dx_age*eta"/>
+        <transition from="Dc_r_N"      to="MDR_N_count"         rate="dst_n*dst_r*dx_age*eta"/>
+        
+        <!--BUSINESS-AS-USUAL - DIAGNOSIS: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="C_P"         to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="R_P"         to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="Tc_P"        to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="I_s_P"       to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="I_r_P"       to="MDR_P_count"         rate="dst_p*dst_r*dx_age*eta"/>
+        <transition from="Dn_s_P"      to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="Dn_r_P"      to="MDR_P_count"         rate="dst_p*dst_r*dx_age*eta"/>
+        <transition from="Ds_s_P"      to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="Ds_r_P"      to="MDR_P_count"         rate="dst_p*dst_r*dx_age*eta"/>
+        <transition from="Dc_s_P"      to="MDR_P_count"         rate="dst_p*dst_s*dx_age*eta"/>
+        <transition from="Dc_r_P"      to="MDR_P_count"         rate="dst_p*dst_r*dx_age*eta"/>
+
+        <multiplier name="tinit" times="1960:2020" values="1/(1+exp(-sh*(x-midx)))"/>
+      </transition.matrix>
+
+      <transition.matrix name="diag" after.test="reldiag">
+        <!--BUSINESS-AS-USUAL - DIAGNOSED WITH TB-->
+        <transition from="S_N"         to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="C_N"         to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="R_N"         to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="I_s_N"       to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="I_r_N"       to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="Dn_s_N"      to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="Dn_r_N"      to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="Ds_s_N"      to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="Ds_r_N"      to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="Dc_s_N"      to="Diag_count"         rate="dx_age*eta"/> 
+        <transition from="Dc_r_N"      to="Diag_count"         rate="dx_age*eta"/>                
+        <transition from="S_P"         to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="C_P"         to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="R_P"         to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Tc_P"        to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="I_s_P"       to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="I_r_P"       to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Dn_s_P"      to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Dn_r_P"      to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Ds_s_P"      to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Ds_r_P"      to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Dc_s_P"      to="Diag_count"         rate="dx_age*eta"/>
+        <transition from="Dc_r_P"      to="Diag_count"         rate="dx_age*eta"/>
+
+        <multiplier name="tinit" times="1960:2020" values="1/(1+exp(-sh*(x-midx)))"/>
+      </transition.matrix>
+
+      <transition.matrix name="test" after.test="reltest">
+        <!--BUSINESS-AS-USUAL - NUMBER TESTED-->
+        <transition from="S_N"         to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="C_N"         to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="R_N"         to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="I_s_N"       to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="I_r_N"       to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="Dn_s_N"      to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="Dn_r_N"      to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="Ds_s_N"      to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="Ds_r_N"      to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="Dc_s_N"      to="Test_count"         rate="dx_age*eta"/> 
+        <transition from="Dc_r_N"      to="Test_count"         rate="dx_age*eta"/>                
+        <transition from="S_P"         to="Test_count"         rate="dx_age*eta"/>
+        <transition from="C_P"         to="Test_count"         rate="dx_age*eta"/>
+        <transition from="R_P"         to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Tc_P"        to="Test_count"         rate="dx_age*eta"/>
+        <transition from="I_s_P"       to="Test_count"         rate="dx_age*eta"/>
+        <transition from="I_r_P"       to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Dn_s_P"      to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Dn_r_P"      to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Ds_s_P"      to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Ds_r_P"      to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Dc_s_P"      to="Test_count"         rate="dx_age*eta"/>
+        <transition from="Dc_r_P"      to="Test_count"         rate="dx_age*eta"/>
+
+        <multiplier name="tinit" times="1960:2020" values="1/(1+exp(-sh*(x-midx)))"/>
+      </transition.matrix>
+
+      <transition.matrix name="initST" after.test="irelinit_ST">
+        <!--INTERVENTION - DIAGNOSIS: NEVER TREATED-->
+        <transition from="S_N"         to="iST_S"               rate="dx_age"/> 
+        <transition from="C_N"         to="iST_C"               rate="dx_age"/> 
+        <transition from="R_N"         to="iST_R"               rate="dx_age"/> 
+        <transition from="I_s_N"       to="iST_I_s"             rate="dx_age"/> 
+        <transition from="I_r_N"       to="iST_I_r"             rate="dx_age"/> 
+        <transition from="Dn_s_N"      to="iST_Dn_s"            rate="dx_age"/> 
+        <transition from="Dn_r_N"      to="iST_Dn_r"            rate="dx_age"/> 
+        <transition from="Ds_s_N"      to="iST_Ds_s"            rate="dx_age"/> 
+        <transition from="Ds_r_N"      to="iST_Ds_r"            rate="dx_age"/> 
+        <transition from="Dc_s_N"      to="iST_Dc_s"            rate="dx_age"/> 
+        <transition from="Dc_r_N"      to="iST_Dc_r"            rate="dx_age"/> 
+
+        <!--INTERVENTION - DIAGNOSIS COUNT: NEVER TREATED-->
+        <transition from="S_N"         to="iST_S_N_count"       rate="dx_age"/> 
+        <transition from="C_N"         to="iST_C_N_count"       rate="dx_age"/> 
+        <transition from="R_N"         to="iST_R_N_count"       rate="dx_age"/> 
+        <transition from="I_s_N"       to="iST_I_s_N_count"     rate="dx_age"/> 
+        <transition from="I_r_N"       to="iST_I_r_N_count"     rate="dx_age"/> 
+        <transition from="Dn_s_N"      to="iST_Dn_s_N_count"    rate="dx_age"/> 
+        <transition from="Dn_r_N"      to="iST_Dn_r_N_count"    rate="dx_age"/> 
+        <transition from="Ds_s_N"      to="iST_Ds_s_N_count"    rate="dx_age"/> 
+        <transition from="Ds_r_N"      to="iST_Ds_r_N_count"    rate="dx_age"/> 
+        <transition from="Dc_s_N"      to="iST_Dc_s_N_count"    rate="dx_age"/> 
+        <transition from="Dc_r_N"      to="iST_Dc_r_N_count"    rate="dx_age"/> 
+        
+        <!--INTERVENTION - DIAGNOSIS: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="iST_S"               rate="dx_age"/>
+        <transition from="C_P"         to="iST_C"               rate="dx_age"/>
+        <transition from="R_P"         to="iST_R"               rate="dx_age"/>
+        <transition from="Tc_P"        to="iST_Tc"              rate="dx_age"/>
+        <transition from="I_s_P"       to="iST_I_s"             rate="dx_age"/>
+        <transition from="I_r_P"       to="iST_I_r"             rate="dx_age"/>
+        <transition from="Dn_s_P"      to="iST_Dn_s"            rate="dx_age"/>
+        <transition from="Dn_r_P"      to="iST_Dn_r"            rate="dx_age"/>
+        <transition from="Ds_s_P"      to="iST_Ds_s"            rate="dx_age"/>
+        <transition from="Ds_r_P"      to="iST_Ds_r"            rate="dx_age"/>
+        <transition from="Dc_s_P"      to="iST_Dc_s"            rate="dx_age"/>
+        <transition from="Dc_r_P"      to="iST_Dc_r"            rate="dx_age"/>
+
+        <!--INTERVENTION - DIAGNOSIS COUNT: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="iST_S_P_count"       rate="dx_age"/>
+        <transition from="C_P"         to="iST_C_P_count"       rate="dx_age"/>
+        <transition from="R_P"         to="iST_R_P_count"       rate="dx_age"/>
+        <transition from="Tc_P"        to="iST_Tc_P_count"      rate="dx_age"/>
+        <transition from="I_s_P"       to="iST_I_s_P_count"     rate="dx_age"/>
+        <transition from="I_r_P"       to="iST_I_r_P_count"     rate="dx_age"/>
+        <transition from="Dn_s_P"      to="iST_Dn_s_P_count"    rate="dx_age"/>
+        <transition from="Dn_r_P"      to="iST_Dn_r_P_count"    rate="dx_age"/>
+        <transition from="Ds_s_P"      to="iST_Ds_s_P_count"    rate="dx_age"/>
+        <transition from="Ds_r_P"      to="iST_Ds_r_P_count"    rate="dx_age"/>
+        <transition from="Dc_s_P"      to="iST_Dc_s_P_count"    rate="dx_age"/>
+        <transition from="Dc_r_P"      to="iST_Dc_r_P_count"    rate="dx_age"/>
+
+        <multiplier name="tinitST" times="1900,2025" values="1,1"/>
+      </transition.matrix>        
+
+      <transition.matrix name="initRT" after.test="irelinit_RT">
+        <!--INTERVENTION - DIAGNOSIS FOR RESISTANT TREATMENT: NEVER TREATED-->
+        <transition from="S_N"         to="iRT_S"               rate="dx_age"/>     
+        <transition from="C_N"         to="iRT_C"               rate="dx_age"/>     
+        <transition from="R_N"         to="iRT_R"               rate="dx_age"/>     
+        <transition from="I_s_N"       to="iRT_I_s"             rate="dx_age"/>     
+        <transition from="I_r_N"       to="iRT_I_r"             rate="dx_age"/>     
+        <transition from="Dn_s_N"      to="iRT_Dn_s"            rate="dx_age"/>     
+        <transition from="Dn_r_N"      to="iRT_Dn_r"            rate="dx_age"/>     
+        <transition from="Ds_s_N"      to="iRT_Ds_s"            rate="dx_age"/>     
+        <transition from="Ds_r_N"      to="iRT_Ds_r"            rate="dx_age"/>     
+        <transition from="Dc_s_N"      to="iRT_Dc_s"            rate="dx_age"/>     
+        <transition from="Dc_r_N"      to="iRT_Dc_r"            rate="dx_age"/>
+        <transition from="S_N"         to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="C_N"         to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="R_N"         to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="I_s_N"       to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="I_r_N"       to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="Dn_s_N"      to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="Dn_r_N"      to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="Ds_s_N"      to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="Ds_r_N"      to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="Dc_s_N"      to="iMDR_N_count"        rate="dx_age"/>     
+        <transition from="Dc_r_N"      to="iMDR_N_count"        rate="dx_age"/>
+
+         <!--INTERVENTION - DIAGNOSIS FOR RESISTANT TREATMENT COUNT: NEVER TREATED-->
+        <transition from="S_N"         to="iRT_S_N_count"       rate="dx_age"/>     
+        <transition from="C_N"         to="iRT_C_N_count"       rate="dx_age"/>     
+        <transition from="R_N"         to="iRT_R_N_count"       rate="dx_age"/>     
+        <transition from="I_s_N"       to="iRT_I_s_N_count"     rate="dx_age"/>     
+        <transition from="I_r_N"       to="iRT_I_r_N_count"     rate="dx_age"/>     
+        <transition from="Dn_s_N"      to="iRT_Dn_s_N_count"    rate="dx_age"/>     
+        <transition from="Dn_r_N"      to="iRT_Dn_r_N_count"    rate="dx_age"/>     
+        <transition from="Ds_s_N"      to="iRT_Ds_s_N_count"    rate="dx_age"/>     
+        <transition from="Ds_r_N"      to="iRT_Ds_r_N_count"    rate="dx_age"/>     
+        <transition from="Dc_s_N"      to="iRT_Dc_s_N_count"    rate="dx_age"/>     
+        <transition from="Dc_r_N"      to="iRT_Dc_r_N_count"    rate="dx_age"/>     
+        
+        <!--INTERVENTION - DIAGNOSIS FOR RESISTANT TREATMENT: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="iRT_S"               rate="dx_age"/>    
+        <transition from="C_P"         to="iRT_C"               rate="dx_age"/>    
+        <transition from="R_P"         to="iRT_R"               rate="dx_age"/>    
+        <transition from="Tc_P"        to="iRT_Tc"              rate="dx_age"/>    
+        <transition from="I_s_P"       to="iRT_I_s"             rate="dx_age"/>    
+        <transition from="I_r_P"       to="iRT_I_r"             rate="dx_age"/>    
+        <transition from="Dn_s_P"      to="iRT_Dn_s"            rate="dx_age"/>    
+        <transition from="Dn_r_P"      to="iRT_Dn_r"            rate="dx_age"/>    
+        <transition from="Ds_s_P"      to="iRT_Ds_s"            rate="dx_age"/>    
+        <transition from="Ds_r_P"      to="iRT_Ds_r"            rate="dx_age"/>    
+        <transition from="Dc_s_P"      to="iRT_Dc_s"            rate="dx_age"/>    
+        <transition from="Dc_r_P"      to="iRT_Dc_r"            rate="dx_age"/>  
+        <transition from="S_P"         to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="C_P"         to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="R_P"         to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Tc_P"        to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="I_s_P"       to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="I_r_P"       to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Dn_s_P"      to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Dn_r_P"      to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Ds_s_P"      to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Ds_r_P"      to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Dc_s_P"      to="iMDR_P_count"        rate="dx_age"/>    
+        <transition from="Dc_r_P"      to="iMDR_P_count"        rate="dx_age"/>    
+
+        <!--INTERVENTION - DIAGNOSIS FOR RESISTANT TREATMENT: PREVIOUSLY TREATED-->
+        <transition from="S_P"         to="iRT_S_P_count"       rate="dx_age"/>    
+        <transition from="C_P"         to="iRT_C_P_count"       rate="dx_age"/>    
+        <transition from="R_P"         to="iRT_R_P_count"       rate="dx_age"/>    
+        <transition from="Tc_P"        to="iRT_Tc_P_count"      rate="dx_age"/>    
+        <transition from="I_s_P"       to="iRT_I_s_P_count"     rate="dx_age"/>    
+        <transition from="I_r_P"       to="iRT_I_r_P_count"     rate="dx_age"/>    
+        <transition from="Dn_s_P"      to="iRT_Dn_s_P_count"    rate="dx_age"/>    
+        <transition from="Dn_r_P"      to="iRT_Dn_r_P_count"    rate="dx_age"/>    
+        <transition from="Ds_s_P"      to="iRT_Ds_s_P_count"    rate="dx_age"/>    
+        <transition from="Ds_r_P"      to="iRT_Ds_r_P_count"    rate="dx_age"/>    
+        <transition from="Dc_s_P"      to="iRT_Dc_s_P_count"    rate="dx_age"/>    
+        <transition from="Dc_r_P"      to="iRT_Dc_r_P_count"    rate="dx_age"/> 
+
+        <multiplier name="tinitRT" times="1900,2025" values="1,1"/>
+      </transition.matrix>        
+
+      <transition.matrix name="init" after.test="irelinit">
+        <!--INTERVENTION - NOTIFICATIONS: NEVER TREATED-->
+        <transition from="S_N"         to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="C_N"         to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="R_N"         to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="I_s_N"       to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="I_r_N"       to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="Dn_s_N"      to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="Dn_r_N"      to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="Ds_s_N"      to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="Ds_r_N"      to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="Dc_s_N"      to="iNot_N_count"        rate="dx_age"/> 
+        <transition from="Dc_r_N"      to="iNot_N_count"        rate="dx_age"/> 
+                                                                                        
+        <!--INTERVENTION - NOTIFICATIONS: PREVIOUSLY TREATED-->                                      
+        <transition from="S_P"         to="iNot_P_count"        rate="dx_age"/>
+        <transition from="C_P"         to="iNot_P_count"        rate="dx_age"/>
+        <transition from="R_P"         to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Tc_P"        to="iNot_P_count"        rate="dx_age"/>
+        <transition from="I_s_P"       to="iNot_P_count"        rate="dx_age"/>
+        <transition from="I_r_P"       to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Dn_s_P"      to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Dn_r_P"      to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Ds_s_P"      to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Ds_r_P"      to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Dc_s_P"      to="iNot_P_count"        rate="dx_age"/>
+        <transition from="Dc_r_P"      to="iNot_P_count"        rate="dx_age"/>
+        <multiplier name="itnit" times="1900,2025" values="1,1"/>
+      </transition.matrix>  
+
+      <transition.matrix name="idiag" after.test="ireldiag">
+        <!--INTERVENTION - DIAGNOSED WITH TB-->
+        <transition from="S_N"         to="iDiag_count"         rate="dx_age"/> 
+        <transition from="C_N"         to="iDiag_count"         rate="dx_age"/> 
+        <transition from="R_N"         to="iDiag_count"         rate="dx_age"/> 
+        <transition from="I_s_N"       to="iDiag_count"         rate="dx_age"/> 
+        <transition from="I_r_N"       to="iDiag_count"         rate="dx_age"/> 
+        <transition from="Dn_s_N"      to="iDiag_count"         rate="dx_age"/> 
+        <transition from="Dn_r_N"      to="iDiag_count"         rate="dx_age"/> 
+        <transition from="Ds_s_N"      to="iDiag_count"         rate="dx_age"/> 
+        <transition from="Ds_r_N"      to="iDiag_count"         rate="dx_age"/> 
+        <transition from="Dc_s_N"      to="iDiag_count"         rate="dx_age"/> 
+        <transition from="Dc_r_N"      to="iDiag_count"         rate="dx_age"/>                
+        <transition from="S_P"         to="iDiag_count"         rate="dx_age"/>
+        <transition from="C_P"         to="iDiag_count"         rate="dx_age"/>
+        <transition from="R_P"         to="iDiag_count"         rate="dx_age"/>
+        <transition from="Tc_P"        to="iDiag_count"         rate="dx_age"/>
+        <transition from="I_s_P"       to="iDiag_count"         rate="dx_age"/>
+        <transition from="I_r_P"       to="iDiag_count"         rate="dx_age"/>
+        <transition from="Dn_s_P"      to="iDiag_count"         rate="dx_age"/>
+        <transition from="Dn_r_P"      to="iDiag_count"         rate="dx_age"/>
+        <transition from="Ds_s_P"      to="iDiag_count"         rate="dx_age"/>
+        <transition from="Ds_r_P"      to="iDiag_count"         rate="dx_age"/>
+        <transition from="Dc_s_P"      to="iDiag_count"         rate="dx_age"/>
+        <transition from="Dc_r_P"      to="iDiag_count"         rate="dx_age"/>
+
+        <multiplier name="itnit" times="1900,2025" values="1,1"/>
+      </transition.matrix>
+
+      <transition.matrix name="itest" after.test="ireltest">
+        <!--INTERVENTION - NUMBER TESTED-->
+        <transition from="S_N"         to="iTest_count"         rate="1"/> 
+        <transition from="C_N"         to="iTest_count"         rate="1"/> 
+        <transition from="R_N"         to="iTest_count"         rate="1"/> 
+        <transition from="I_s_N"       to="iTest_count"         rate="1"/> 
+        <transition from="I_r_N"       to="iTest_count"         rate="1"/> 
+        <transition from="Dn_s_N"      to="iTest_count"         rate="1"/> 
+        <transition from="Dn_r_N"      to="iTest_count"         rate="1"/> 
+        <transition from="Ds_s_N"      to="iTest_count"         rate="1"/> 
+        <transition from="Ds_r_N"      to="iTest_count"         rate="1"/> 
+        <transition from="Dc_s_N"      to="iTest_count"         rate="1"/> 
+        <transition from="Dc_r_N"      to="iTest_count"         rate="1"/>                
+        <transition from="S_P"         to="iTest_count"         rate="1"/>
+        <transition from="C_P"         to="iTest_count"         rate="1"/>
+        <transition from="R_P"         to="iTest_count"         rate="1"/>
+        <transition from="Tc_P"        to="iTest_count"         rate="1"/>
+        <transition from="I_s_P"       to="iTest_count"         rate="1"/>
+        <transition from="I_r_P"       to="iTest_count"         rate="1"/>
+        <transition from="Dn_s_P"      to="iTest_count"         rate="1"/>
+        <transition from="Dn_r_P"      to="iTest_count"         rate="1"/>
+        <transition from="Ds_s_P"      to="iTest_count"         rate="1"/>
+        <transition from="Ds_r_P"      to="iTest_count"         rate="1"/>
+        <transition from="Dc_s_P"      to="iTest_count"         rate="1"/>
+        <transition from="Dc_r_P"      to="iTest_count"         rate="1"/>
+
+        <multiplier name="itnit" times="1900,2025" values="1,1"/>
+      </transition.matrix>
+      
+      <transition.matrix name="itest" after.test="ireltest_XPERT">
+      <!--INTERVENTION - NUMBER TESTED WITH XPERT-->
+        <transition from="S_N"         to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="C_N"         to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="R_N"         to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="I_s_N"       to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="I_r_N"       to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="Dn_s_N"      to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="Dn_r_N"      to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="Ds_s_N"      to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="Ds_r_N"      to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="Dc_s_N"      to="n_screen_CXRpositive_count"         rate="1"/> 
+        <transition from="Dc_r_N"      to="n_screen_CXRpositive_count"         rate="1"/>                
+        <transition from="S_P"         to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="C_P"         to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="R_P"         to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Tc_P"        to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="I_s_P"       to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="I_r_P"       to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Dn_s_P"      to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Dn_r_P"      to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Ds_s_P"      to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Ds_r_P"      to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Dc_s_P"      to="n_screen_CXRpositive_count"         rate="1"/>
+        <transition from="Dc_r_P"      to="n_screen_CXRpositive_count"         rate="1"/>
+
+        <multiplier name="itnit" times="1900,2025" values="1,1"/>
+      </transition.matrix>
+
+      <!--INTERVENTION - TREATMENT COMPLETION: NON-TB STATES-->
+      <transition.matrix name="comp_rx" after.test="icomp">
+        <transition from="iST_S"       to="S_P"                 rate="1"/>
+        <transition from="iRT_S"       to="S_P"                 rate="1"/>
+        <transition from="iST_C"       to="C_P"                 rate="1"/>
+        <transition from="iRT_C"       to="C_P"                 rate="1"/>
+        <transition from="iST_R"       to="R_P"                 rate="1"/>
+        <transition from="iRT_R"       to="R_P"                 rate="1"/>
+        <transition from="iST_Tc"      to="Tc_P"                rate="1"/>
+        <transition from="iRT_Tc"      to="Tc_P"                rate="1"/>
+        <transition from="iST_S"       to="iST_succ_count"      rate="1"/> 
+        <transition from="iRT_S"       to="iRT_succ_count"      rate="1"/> 
+        <transition from="iST_C"       to="iST_succ_count"      rate="1"/> 
+        <transition from="iRT_C"       to="iRT_succ_count"      rate="1"/> 
+        <transition from="iST_R"       to="iST_succ_count"      rate="1"/> 
+        <transition from="iRT_R"       to="iRT_succ_count"      rate="1"/> 
+        <transition from="iST_Tc"      to="iST_succ_count"      rate="1"/> 
+        <transition from="iRT_Tc"      to="iRT_succ_count"      rate="1"/> 
+        <transition from="iST_S"       to="iST_S_succ_count"    rate="1"/> 
+        <transition from="iRT_S"       to="iRT_S_succ_count"    rate="1"/> 
+        <transition from="iST_C"       to="iST_C_succ_count"    rate="1"/> 
+        <transition from="iRT_C"       to="iRT_C_succ_count"    rate="1"/> 
+        <transition from="iST_R"       to="iST_R_succ_count"    rate="1"/> 
+        <transition from="iRT_R"       to="iRT_R_succ_count"    rate="1"/> 
+        <transition from="iST_Tc"      to="iST_Tc_succ_count"   rate="1"/> 
+        <transition from="iRT_Tc"      to="iRT_Tc_succ_count"   rate="1"/> 
+        <multiplier name="tcomp_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+      <!--INTERVENTION - SUCCESSFUL TREATMENT: INFECTION AND DISEASE STATES-->
+      <transition.matrix name="succ_rx" after.test="isucc">
+        <transition from="iST_I_s"     to="C_P"                 rate="1"/>
+        <transition from="iRT_I_s"     to="C_P"                 rate="1"/>
+        <transition from="iRT_I_r"     to="C_P"                 rate="1"/>
+        <transition from="iST_Dn_s"    to="R_P"                 rate="1"/>
+        <transition from="iRT_Dn_s"    to="R_P"                 rate="1"/>
+        <transition from="iRT_Dn_r"    to="R_P"                 rate="1"/>
+        <transition from="iST_Ds_s"    to="iTr_s_P"             rate="1"/>
+        <transition from="iRT_Ds_s"    to="iTr_s_P"             rate="1"/>
+        <transition from="iRT_Ds_r"    to="iTr_r_P"             rate="1"/>
+        <transition from="iST_Dc_s"    to="iTr_s_P"             rate="1"/>
+        <transition from="iRT_Dc_s"    to="iTr_s_P"             rate="1"/>
+        <transition from="iRT_Dc_r"    to="iTr_r_P"             rate="1"/>
+        <transition from="iST_I_s"     to="iST_succ_count"      rate="1"/>           
+        <transition from="iRT_I_s"     to="iRT_succ_count"      rate="1"/>           
+        <transition from="iRT_I_r"     to="iRT_succ_count"      rate="1"/>           
+        <transition from="iST_Dn_s"    to="iST_succ_count"      rate="1"/>           
+        <transition from="iRT_Dn_s"    to="iRT_succ_count"      rate="1"/>           
+        <transition from="iRT_Dn_r"    to="iRT_succ_count"      rate="1"/>           
+        <transition from="iST_Ds_s"    to="iST_succ_count"      rate="1"/>            
+        <transition from="iRT_Ds_s"    to="iRT_succ_count"      rate="1"/>            
+        <transition from="iRT_Ds_r"    to="iRT_succ_count"      rate="1"/>            
+        <transition from="iST_Dc_s"    to="iST_succ_count"      rate="1"/>           
+        <transition from="iRT_Dc_s"    to="iRT_succ_count"      rate="1"/>           
+        <transition from="iRT_Dc_r"    to="iRT_succ_count"      rate="1"/> 
+        <transition from="iST_I_s"     to="iST_I_succ_count"    rate="1"/>           
+        <transition from="iRT_I_s"     to="iRT_I_succ_count"    rate="1"/>           
+        <transition from="iRT_I_r"     to="iRT_I_succ_count"    rate="1"/>           
+        <transition from="iST_Dn_s"    to="iST_Dn_succ_count"   rate="1"/>           
+        <transition from="iRT_Dn_s"    to="iRT_Dn_succ_count"   rate="1"/>           
+        <transition from="iRT_Dn_r"    to="iRT_Dn_succ_count"   rate="1"/>           
+        <transition from="iST_Ds_s"    to="iST_Ds_succ_count"   rate="1"/>            
+        <transition from="iRT_Ds_s"    to="iRT_Ds_succ_count"   rate="1"/>            
+        <transition from="iRT_Ds_r"    to="iRT_Ds_succ_count"   rate="1"/>            
+        <transition from="iST_Dc_s"    to="iST_Dc_succ_count"   rate="1"/>           
+        <transition from="iRT_Dc_s"    to="iRT_Dc_succ_count"   rate="1"/>           
+        <transition from="iRT_Dc_r"    to="iRT_Dc_succ_count"   rate="1"/>          
+        <transition from="iST_Ds_s"    to="iTr_s_P_count"       rate="1"/>               
+        <transition from="iRT_Ds_s"    to="iTr_s_P_count"       rate="1"/>               
+        <transition from="iRT_Ds_r"    to="iTr_r_P_count"       rate="1"/>               
+        <transition from="iST_Dc_s"    to="iTr_s_P_count"       rate="1"/>               
+        <transition from="iRT_Dc_s"    to="iTr_s_P_count"       rate="1"/>               
+        <transition from="iRT_Dc_r"    to="iTr_r_P_count"       rate="1"/>               
+        <multiplier name="tsucc_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+      <!--INTERVENTION - SUCCESSFUL TREATMENT - RESISTANT STRAIN ON STANDARD TREATMENT--> 
+      <transition.matrix name="succ_rsrx" after.test="isucc_rs">
+        <transition from="iST_I_r"     to="C_P"                 rate="1"/>
+        <transition from="iST_Dn_r"    to="R_P"                 rate="1"/>
+        <transition from="iST_Ds_r"    to="iTr_r_P"             rate="1"/>
+        <transition from="iST_Dc_r"    to="iTr_r_P"             rate="1"/>
+        <transition from="iST_I_r"     to="iST_succ_count"      rate="1"/> 
+        <transition from="iST_Dn_r"    to="iST_succ_count"      rate="1"/> 
+        <transition from="iST_Ds_r"    to="iST_succ_count"      rate="1"/>  
+        <transition from="iST_Dc_r"    to="iST_succ_count"      rate="1"/> 
+        <transition from="iST_I_r"     to="iST_I_succ_count"    rate="1"/> 
+        <transition from="iST_Dn_r"    to="iST_Dn_succ_count"   rate="1"/> 
+        <transition from="iST_Ds_r"    to="iST_Ds_succ_count"   rate="1"/>  
+        <transition from="iST_Dc_r"    to="iST_Dc_succ_count"   rate="1"/> 
+        <transition from="iST_Ds_r"    to="iTr_r_P_count"       rate="1"/>     
+        <transition from="iST_Dc_r"    to="iTr_r_P_count"       rate="1"/>     
+        <multiplier name="tsucc_rsrx" times="1900,2025" values="1,1"/>
+      </transition.matrix>
+      
+      <!--INTERVENTION - UNSUCCESSFUL TREATMENT: INFECTION AND SUBCLINICAL DISEASE-->
+      <transition.matrix name="unsucc_rx" after.test="iunsucc">
+        <transition from="iST_I_s"     to="I_s_P"               rate="1"/>
+        <transition from="iRT_I_s"     to="I_s_P"               rate="1"/>
+        <transition from="iRT_I_r"     to="I_r_P"               rate="1"/>
+        <transition from="iST_Ds_s"    to="Ds_s_P"              rate="1"/>
+        <transition from="iRT_Ds_s"    to="Ds_s_P"              rate="1"/>
+        <transition from="iRT_Ds_r"    to="Ds_r_P"              rate="1"/>    
+        <transition from="iST_I_s"     to="iST_unsucc_count"    rate="1"/>           
+        <transition from="iRT_I_s"     to="iRT_unsucc_count"    rate="1"/>           
+        <transition from="iRT_I_r"     to="iRT_unsucc_count"    rate="1"/>           
+        <transition from="iST_Ds_s"    to="iST_unsucc_count"    rate="1"/>            
+        <transition from="iRT_Ds_s"    to="iRT_unsucc_count"    rate="1"/>            
+        <transition from="iRT_Ds_r"    to="iRT_unsucc_count"    rate="1"/>    
+        <transition from="iST_I_s"     to="iST_I_unsucc_count"  rate="1"/>           
+        <transition from="iRT_I_s"     to="iRT_I_unsucc_count"  rate="1"/>           
+        <transition from="iRT_I_r"     to="iRT_I_unsucc_count"  rate="1"/>           
+        <transition from="iST_Ds_s"    to="iST_Ds_unsucc_count" rate="1"/>            
+        <transition from="iRT_Ds_s"    to="iRT_Ds_unsucc_count" rate="1"/>            
+        <transition from="iRT_Ds_r"    to="iRT_Ds_unsucc_count" rate="1"/>           
+        <transition from="iST_Ds_s"    to="Ds_s_P_count"        rate="1"/>           
+        <transition from="iRT_Ds_s"    to="Ds_s_P_count"        rate="1"/>           
+        <transition from="iRT_Ds_r"    to="Ds_r_P_count"        rate="1"/>           
+        <multiplier name="tunsucc_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+      <!--INTERVENTION - UNSUCCESSFUL TREATMENT - RESISTANT STRAIN ON STANDARD TREATMENT FOR INFECTION AND SUBCLINICAL DISEASE--> 
+      <transition.matrix name="unsucc_rsrx" after.test="iunsucc_rs">
+        <transition from="iST_I_r"     to="I_r_P"               rate="1"/>
+        <transition from="iST_Ds_r"    to="Ds_r_P"              rate="1"/>
+        <transition from="iST_I_r"     to="iST_unsucc_count"    rate="1"/> 
+        <transition from="iST_Ds_r"    to="iST_unsucc_count"    rate="1"/>  
+        <transition from="iST_I_r"     to="iST_I_unsucc_count"  rate="1"/> 
+        <transition from="iST_Ds_r"    to="iST_Ds_unsucc_count" rate="1"/>  
+        <transition from="iST_Ds_r"    to="Ds_r_P_count"        rate="1"/> 
+        <multiplier name="tunsucc_rsrx" times="1900,2025" values="1,1"/>
+      </transition.matrix>  
+
+      <!--INTERVENTION - UNSUCCESSFUL TREATMENT: ON TREATMENT MORTALITY FOR NON-INFECTIOUS AND CLINICAL DISEASE--> 
+      <transition.matrix name="unsucc_mortrx" after.test="iunsucc_mort">
+        <transition from="iST_Dn_s"    to="Dn_s_P"              rate="1"/>
+        <transition from="iRT_Dn_s"    to="Dn_s_P"              rate="1"/>
+        <transition from="iRT_Dn_r"    to="Dn_r_P"              rate="1"/> 
+        <transition from="iST_Dc_s"    to="Dc_s_P"              rate="1"/>
+        <transition from="iRT_Dc_s"    to="Dc_s_P"              rate="1"/>
+        <transition from="iRT_Dc_r"    to="Dc_r_P"              rate="1"/>
+        <transition from="iST_Dn_s"    to="iST_unsucc_count"    rate="1"/> 
+        <transition from="iRT_Dn_s"    to="iRT_unsucc_count"    rate="1"/>   
+        <transition from="iRT_Dn_r"    to="iRT_unsucc_count"    rate="1"/> 
+        <transition from="iST_Dc_s"    to="iST_unsucc_count"    rate="1"/>  
+        <transition from="iRT_Dc_s"    to="iRT_unsucc_count"    rate="1"/>            
+        <transition from="iRT_Dc_r"    to="iRT_unsucc_count"    rate="1"/>    
+        <transition from="iST_Dn_s"    to="iST_Dn_unsucc_count" rate="1"/> 
+        <transition from="iRT_Dn_s"    to="iRT_Dn_unsucc_count" rate="1"/>   
+        <transition from="iRT_Dn_r"    to="iRT_Dn_unsucc_count" rate="1"/> 
+        <transition from="iST_Dc_s"    to="iST_Dc_unsucc_count" rate="1"/>  
+        <transition from="iRT_Dc_s"    to="iRT_Dc_unsucc_count" rate="1"/>            
+        <transition from="iRT_Dc_r"    to="iRT_Dc_unsucc_count" rate="1"/>                
+        <transition from="iST_Dc_s"    to="Dc_s_P_count"        rate="1"/>  
+        <transition from="iRT_Dc_s"    to="Dc_s_P_count"        rate="1"/>           
+        <transition from="iRT_Dc_r"    to="Dc_r_P_count"        rate="1"/>     
+        <multiplier name="tunsucc_mortrx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+      
+      <!--INTERVENTION - UNSUCCESSFUL TREATMENT: RESISTANT STRAIN ON TREATMENT MORTALITY FOR NON-INFECTIOUS AND CLINICAL DISEASE--> 
+      <transition.matrix name="unsucc_mort_rsrx" after.test="iunsucc_mort_rs">
+        <transition from="iST_Dn_r"    to="Dn_r_P"              rate="1"/>
+        <transition from="iST_Dc_r"    to="Dc_r_P"              rate="1"/>          
+        <transition from="iST_Dn_r"    to="iST_unsucc_count"    rate="1"/> 
+        <transition from="iST_Dc_r"    to="iST_unsucc_count"    rate="1"/>  
+        <transition from="iST_Dn_r"    to="iST_Dn_unsucc_count" rate="1"/> 
+        <transition from="iST_Dc_r"    to="iST_Dc_unsucc_count" rate="1"/>  
+        <transition from="iST_Dc_r"    to="Dc_r_P_count"        rate="1"/> 
+        <multiplier name="tunsucc_mort_rsrx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+      <!--ON TREATMENT MORTALITY--> 
+      <transition.matrix name="mort_rx" after.test="imort">
+        <transition from="iST_Dn_s"    to="iST_Dn_s_dead"       rate="1"/> 
+        <transition from="iST_Dn_r"    to="iST_Dn_r_dead"       rate="1"/> 
+        <transition from="iRT_Dn_s"    to="iRT_Dn_s_dead"       rate="1"/> 
+        <transition from="iRT_Dn_r"    to="iRT_Dn_r_dead"       rate="1"/> 
+        <transition from="iST_Dc_s"    to="iST_Dc_s_dead"       rate="1"/> 
+        <transition from="iST_Dc_r"    to="iST_Dc_r_dead"       rate="1"/> 
+        <transition from="iRT_Dc_s"    to="iRT_Dc_s_dead"       rate="1"/> 
+        <transition from="iRT_Dc_r"    to="iRT_Dc_r_dead"       rate="1"/> 
+        <multiplier name="tmort_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+      <!--RELAPSE: NON-INFECTIOUS SUSCEPTIBLE STRAIN--> 
+      <transition.matrix name="relap_non_s_rx" after.test="irelap_non_s">
+        <transition from="iTr_s_P"     to="Dn_s_P"              rate="1"/>
+        <transition from="iTr_s_P"     to="Dn_s_count"          rate="1"/>
+        <multiplier name="trelap_non_s_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix>  
+
+      <!--RELAPSE: NON-INFECTIOUS RESISTANT STRAIN--> 
+      <transition.matrix name="relap_non_r_rx" after.test="irelap_non_r">
+        <transition from="iTr_r_P"     to="Dn_r_P"              rate="1"/>
+        <transition from="iTr_r_P"     to="Dn_r_count"          rate="1"/>
+        <multiplier name="trelap_non_r_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+      
+      <!--RELAPSE: SUBCLINICAL SUSCEPTIBLE STRAIN--> 
+      <transition.matrix name="relap_sub_s_rx" after.test="irelap_sub_s">
+        <transition from="iTr_s_P"     to="Ds_s_P"              rate="1"/>
+        <transition from="iTr_s_P"     to="Ds_s_count"          rate="1"/>
+        <multiplier name="trelap_sub_s_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+      <!--RELAPSE: SUBCLINICAL RESISTANT STRAIN--> 
+      <transition.matrix name="relap_sub_r_rx" after.test="irelap_sub_r">
+        <transition from="iTr_r_P"     to="Ds_r_P"              rate="1"/>
+        <transition from="iTr_r_P"     to="Ds_r_count"          rate="1"/>
+        <multiplier name="trelap_sub_r_rx" times="1900,2025" values="1,1"/>
+      </transition.matrix> 
+
+    </TB.progression>
+
+    <TB.infectivity>
+      <age.groups> 
+        <age.group name="A0"/> 
+        <age.group name="A15"/> 
+      </age.groups> 
+      <TB.parameter name="t"        value="0.81"/>     
+      <TB.parameter name="relfit"   value="0.73"/>
+
+      <!--AGE-SPECIFIC FLOWS-->
+      <TB.parameter age.group="A0"    name="k"    value="1"/> 
+      <TB.parameter age.group="A15"   name="k"    value="1"/> 
+
+      <!--INCARCERATION-SPECIFIC FLOWS-->
+      <TB.parameter RISK.state="community"    name="trns_pri_p"   value="0"/>
+      <TB.parameter RISK.state="exprsn"       name="trns_pri_p"   value="0"/>
+      <TB.parameter RISK.state="prison"       name="trns_pri_p"   value="1"/>
+      <TB.parameter RISK.state="exprsndead"   name="trns_pri_p"   value="0"/>
+      <TB.parameter RISK.state="priscount"   name="trns_pri_p"   value="0"/>
+      <TB.parameter RISK.state="community"    name="trns_pri_cx"   value="1"/>
+      <TB.parameter RISK.state="exprsn"       name="trns_pri_cx"   value="1"/>
+      <TB.parameter RISK.state="prison"       name="trns_pri_cx"   value="0"/>
+      <TB.parameter RISK.state="exprsndead"   name="trns_pri_cx"   value="0"/>
+      <TB.parameter RISK.state="priscount"   name="trns_pri_cx"   value="0"/>
+
+      <infectivity.matrix Mtb-strain="s_pri_p"> <!--INFECTIOUS DS COMPARTMENTS-->
+        <infectivity state="Ds_s_N"   value="t*k*trns_pri_p"/> 
+        <infectivity state="Dc_s_N"   value="1*k*trns_pri_p"/> 
+        <infectivity state="Ds_s_P"   value="t*k*trns_pri_p"/> 
+        <infectivity state="Dc_s_P"   value="1*k*trns_pri_p"/> 
+      </infectivity.matrix>
+
+      <infectivity.matrix Mtb-strain="r_pri_p"> <!--INFECTIOUS DR COMPARTMENTS-->
+        <infectivity state="Ds_r_N"   value="relfit*t*k*trns_pri_p"/> 
+        <infectivity state="Dc_r_N"   value="relfit*1*k*trns_pri_p"/> 
+        <infectivity state="Ds_r_P"   value="relfit*t*k*trns_pri_p"/> 
+        <infectivity state="Dc_r_P"   value="relfit*1*k*trns_pri_p"/> 
+      </infectivity.matrix>
+
+      <infectivity.matrix Mtb-strain="s_pri_cx"> <!--INFECTIOUS DS COMPARTMENTS-->
+        <infectivity state="Ds_s_N"   value="t*k*trns_pri_cx"/> 
+        <infectivity state="Dc_s_N"   value="1*k*trns_pri_cx"/> 
+        <infectivity state="Ds_s_P"   value="t*k*trns_pri_cx"/> 
+        <infectivity state="Dc_s_P"   value="1*k*trns_pri_cx"/> 
+      </infectivity.matrix>
+
+      <infectivity.matrix Mtb-strain="r_pri_cx"> <!--INFECTIOUS DR COMPARTMENTS-->
+        <infectivity state="Ds_r_N"   value="relfit*t*k*trns_pri_cx"/> 
+        <infectivity state="Dc_r_N"   value="relfit*1*k*trns_pri_cx"/> 
+        <infectivity state="Ds_r_P"   value="relfit*t*k*trns_pri_cx"/> 
+        <infectivity state="Dc_r_P"   value="relfit*1*k*trns_pri_cx"/> 
+      </infectivity.matrix>
+    </TB.infectivity>
+
+    <TB.transmission>
+        <TB.parameter name="pT"    value="0.0013"/>
+        <TB.parameter name="prog_contRate_pri" value="1.53"/> 
+        <TB.parameter name="cscal" value="1.16"/>
+        <TB.parameter name="prog_inprison"   value="1.1"/> 
+        <TB.parameter name="p"     value="0.22"/>
+        <TB.parameter name="g"     value="4.27"/>
+        <TB.parameter RISK.state="community"    name="mix_pri_p"   value="0"/>
+        <TB.parameter RISK.state="exprsn"       name="mix_pri_p"   value="0"/>
+        <TB.parameter RISK.state="prison"       name="mix_pri_p"   value="1"/>
+        <TB.parameter RISK.state="exprsndead"   name="mix_pri_p"   value="0"/>
+        <TB.parameter RISK.state="priscount"   name="mix_pri_p"   value="0"/>
+        <TB.parameter RISK.state="community"    name="mix_pri_cx"   value="1"/> 
+        <TB.parameter RISK.state="exprsn"       name="mix_pri_cx"   value="1"/>
+        <TB.parameter RISK.state="prison"       name="mix_pri_cx"   value="0"/>
+        <TB.parameter RISK.state="exprsndead"   name="mix_pri_cx"   value="0"/>
+        <TB.parameter RISK.state="priscount"   name="mix_pri_cx"   value="0"/>
+  
+        <transmission.matrix Mtb-strain="s_pri_p"> <!--DS TRANSMISSION-->
+  
+          <!--TRANSMISSION: NEVER TREATED-->
+          <transition from="S_N"    to="I_s_N"   rate="pT*mix_pri_p"/>
+          <transition from="C_N"    to="I_s_N"   rate="pT*mix_pri_p"/>
+          <transition from="R_N"    to="I_s_N"   rate="pT*p*mix_pri_p"/>
+  
+          <!--TRANSMISSION: PREVIOUSLY TREATED-->       
+          <transition from="S_P"    to="I_s_P"   rate="pT*mix_pri_p"/>
+          <transition from="C_P"    to="I_s_P"   rate="pT*mix_pri_p"/>
+          <transition from="R_P"    to="I_s_P"   rate="pT*p*mix_pri_p"/>
+          <transition from="Tc_P"   to="I_s_P"   rate="pT*g*mix_pri_p"/>
+  
+          <!--CORE CALIBRATION/TESTING COMPARTMENTS-->
+          <transition from="S_N"    to="I_s_count"      rate="pT*mix_pri_p"/>   
+          <transition from="C_N"    to="I_s_count"      rate="pT*mix_pri_p"/>   
+          <transition from="R_N"    to="I_s_count"      rate="pT*p*mix_pri_p"/> 
+          <transition from="S_P"    to="I_s_count"      rate="pT*mix_pri_p"/>   
+          <transition from="C_P"    to="I_s_count"      rate="pT*mix_pri_p"/>   
+          <transition from="R_P"    to="I_s_count"      rate="pT*p*mix_pri_p"/> 
+          <transition from="Tc_P"   to="I_s_count"      rate="pT*g*mix_pri_p"/> 
+          <transition from="Tc_P"   to="I_s_Tc_count"   rate="pT*g*mix_pri_p"/> 
+          
+          <multiplier name="inf_s" times="1900,2020" values="((-155*(prog_inprison^2))+(583*prog_inprison)-410)*prog_contRate_pri,((-155*(prog_inprison^2))+(583*prog_inprison)-410)*prog_contRate_pri"/>
+          
+        </transmission.matrix>
+        
+        <transmission.matrix Mtb-strain="r_pri_p"> <!--DR TRANSMISSION-->
+          <!--TRANSMISSION: NEVER TREATED-->
+          <transition from="S_N"    to="I_r_N"   rate="pT*mix_pri_p"/>
+          <transition from="C_N"    to="I_r_N"   rate="pT*mix_pri_p"/>
+          <transition from="R_N"    to="I_r_N"   rate="pT*p*mix_pri_p"/>
+          <transition from="I_s_N"  to="I_r_N"   rate="pT*mix_pri_p"/>
+  
+          <!--TRANSMISSION: PREVIOUSLY TREATED-->  
+          <transition from="S_P"    to="I_r_P"   rate="pT*mix_pri_p"/>
+          <transition from="C_P"    to="I_r_P"   rate="pT*mix_pri_p"/>
+          <transition from="R_P"    to="I_r_P"   rate="pT*p*mix_pri_p"/>
+          <transition from="I_s_P"  to="I_r_P"   rate="pT*mix_pri_p"/>
+          <transition from="Tc_P"   to="I_r_P"   rate="pT*g*mix_pri_p"/>
+  
+          <!--CORE CALIBRATION/TESTING COMPARTMENTS-->
+          <transition from="S_N"    to="I_r_count"      rate="pT*mix_pri_p"/>   
+          <transition from="C_N"    to="I_r_count"      rate="pT*mix_pri_p"/>   
+          <transition from="R_N"    to="I_r_count"      rate="pT*p*mix_pri_p"/> 
+          <transition from="I_s_N"  to="I_r_count"      rate="pT*mix_pri_p"/>   
+          <transition from="S_P"    to="I_r_count"      rate="pT*mix_pri_p"/>   
+          <transition from="C_P"    to="I_r_count"      rate="pT*mix_pri_p"/>   
+          <transition from="R_P"    to="I_r_count"      rate="pT*p*mix_pri_p"/> 
+          <transition from="I_s_P"  to="I_r_count"      rate="pT*mix_pri_p"/>   
+          <transition from="Tc_P"   to="I_r_count"      rate="pT*g*mix_pri_p"/> 
+          <transition from="Tc_P"   to="I_r_Tc_count"   rate="pT*g*mix_pri_p"/> 
+  
+          <multiplier name="inf_r" times="1900,2020" values="((-155*(prog_inprison^2))+(583*prog_inprison)-410)*prog_contRate_pri,((-155*(prog_inprison^2))+(583*prog_inprison)-410)*prog_contRate_pri"/>
+  
+        </transmission.matrix>
+  
+        <transmission.matrix Mtb-strain="s_pri_cx"> <!--DS TRANSMISSION-->
+  
+          <!--TRANSMISSION: NEVER TREATED-->
+          <transition from="S_N"    to="I_s_N"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="C_N"    to="I_s_N"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="R_N"    to="I_s_N"   rate="pT*cscal*p*mix_pri_cx"/>
+  
+          <!--TRANSMISSION: PREVIOUSLY TREATED-->       
+          <transition from="S_P"    to="I_s_P"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="C_P"    to="I_s_P"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="R_P"    to="I_s_P"   rate="pT*cscal*p*mix_pri_cx"/>
+          <transition from="Tc_P"   to="I_s_P"   rate="pT*cscal*g*mix_pri_cx"/>
+  
+          <!--CORE CALIBRATION/TESTING COMPARTMENTS-->
+          <transition from="S_N"    to="I_s_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="C_N"    to="I_s_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="R_N"    to="I_s_count"      rate="pT*cscal*p*mix_pri_cx"/> 
+          <transition from="S_P"    to="I_s_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="C_P"    to="I_s_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="R_P"    to="I_s_count"      rate="pT*cscal*p*mix_pri_cx"/> 
+          <transition from="Tc_P"   to="I_s_count"      rate="pT*cscal*g*mix_pri_cx"/> 
+          <transition from="Tc_P"   to="I_s_Tc_count"   rate="pT*cscal*g*mix_pri_cx"/> 
+          
+          <multiplier name="inf_s" times="1900,2020" values="1,1"/>
+          
+        </transmission.matrix>
+        
+        <transmission.matrix Mtb-strain="r_pri_cx"> <!--DR TRANSMISSION-->
+          <!--TRANSMISSION: NEVER TREATED-->
+          <transition from="S_N"    to="I_r_N"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="C_N"    to="I_r_N"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="R_N"    to="I_r_N"   rate="pT*cscal*p*mix_pri_cx"/>
+          <transition from="I_s_N"  to="I_r_N"   rate="pT*cscal*mix_pri_cx"/>
+  
+          <!--TRANSMISSION: PREVIOUSLY TREATED-->  
+          <transition from="S_P"    to="I_r_P"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="C_P"    to="I_r_P"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="R_P"    to="I_r_P"   rate="pT*cscal*p*mix_pri_cx"/>
+          <transition from="I_s_P"  to="I_r_P"   rate="pT*cscal*mix_pri_cx"/>
+          <transition from="Tc_P"   to="I_r_P"   rate="pT*cscal*g*mix_pri_cx"/>
+  
+          <!--CORE CALIBRATION/TESTING COMPARTMENTS-->
+          <transition from="S_N"    to="I_r_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="C_N"    to="I_r_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="R_N"    to="I_r_count"      rate="pT*cscal*p*mix_pri_cx"/> 
+          <transition from="I_s_N"  to="I_r_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="S_P"    to="I_r_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="C_P"    to="I_r_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="R_P"    to="I_r_count"      rate="pT*cscal*p*mix_pri_cx"/> 
+          <transition from="I_s_P"  to="I_r_count"      rate="pT*cscal*mix_pri_cx"/>   
+          <transition from="Tc_P"   to="I_r_count"      rate="pT*cscal*g*mix_pri_cx"/> 
+          <transition from="Tc_P"   to="I_r_Tc_count"   rate="pT*cscal*g*mix_pri_cx"/> 
+  
+          <multiplier name="inf_r" times="1900,2020" values="1,1"/>
+  
+        </transmission.matrix>
+      </TB.transmission>
+    </TB>
+  </TB.Vx.model.inputfile>
