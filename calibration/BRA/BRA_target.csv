@@ -1,0 +1,22 @@
+country,year,xVXa,xSES,xRISK,xHIV,xTB,xtype ,xcause,yVXa,ySES,yRISK,yHIV,yTB,ytype,ycause,fn,age_from,age_thru,value,lo,hi,err,name,type,orig_err
+BRA,2010.5,NA,NA,all,NA,"Dn_dead, Dc_dead",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,4.2,3.7,4.7,0.5,TB_mort_0_99,inci,0.5
+BRA,2022.5,NA,NA,all,NA,"Dn_dead, Dc_dead",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,6.2,5.3,7.1,0.7,TB_mort_0_99,inci,0.7
+BRA,2010.5,NA,NA,all,NA,"Not_N_count,Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,39,31.2,46.8,7.8,TB_not_0_99,inci,7.8
+BRA,2022.5,NA,NA,all,NA,"Not_N_count,Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,42,33.6,50.4,8.4,TB_not_0_99,inci,8.4
+BRA,2022.5,NA,NA,all,NA,"Not_N_count,Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,14,6.3,5,7.6,1.25,TB_not_0_14,inci,1.25
+BRA,2022.5,NA,NA,all,NA,"Not_N_count,Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,50.4,40.3,60.5,10.05,TB_not_15_99,inci,10.05
+BRA,2007.5,NA,NA,prison,NA,"Not_N_count,Not_P_count",count,NA,NA,NA,prison,NA,all,stock,NA,1e5*x/y,15,99,804,643,965,161,TB_notpris_15_99,inci,161
+BRA,2019.5,NA,NA,prison,NA,"Not_N_count,Not_P_count",count,NA,NA,NA,prison,NA,all,stock,NA,1e5*x/y,15,99,1303,1042,1564,261,TB_notpris_15_99,inci,261
+BRA,2010.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.905/y,0,99,44,38,51,6.5,TB_inc_0_99,inci,6.5
+BRA,2022.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.905/y,0,99,49,41,56,7,TB_inc_0_99,inci,7
+BRA,2022.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.905/y,0,14,11.6,9.6,13.2,1.8,TB_inc_0_14,inci,1.8
+BRA,2022.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.905/y,15,99,58.5,49.7,67.8,9.1,TB_inc_15_99,inci,9.1
+BRA,2007.5,NA,NA,prison,NA,Inc_Dc_count,count,NA,NA,NA,prison,NA,all,stock,NA,(1e5*x*0.86)/0.905/y,15,99,1650,1181,2340,579.5,TB_incpris_15_99,inci,579.5
+BRA,2019.5,NA,NA,prison,NA,Inc_Dc_count,count,NA,NA,NA,prison,NA,all,stock,NA,(1e5*x*0.86)/0.905/y,15,99,2169,1588,2958,685,TB_incpris_15_99,inci,685
+BRA,2000.5,NA,NA,prison,NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,189,151,227,38,Pris_prev,prev,38
+BRA,2019.5,NA,NA,prison,NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,452,362,542,90,Pris_prev,prev,90
+BRA,2022.5,NA,NA,prison,NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,488,390,586,98,Pris_prev,prev,98
+BRA,2016.5,NA,NA,priscount,NA,all,count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,338,210,468,129,Pris_admis,inci,129
+BRA,2019.5,NA,NA,priscount,NA,all,count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,442,275,612,168.5,Pris_admis,inci,168.5
+BRA,2022.5,NA,NA,priscount,NA,all,count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,347,216,480,132,Pris_admis,inci,132
+BRA,2022.5,NA,NA,all,NA,"MDR_N_count, MDR_P_count",count,NA,NA,NA,all,NA,"Not_N_count, Not_P_count",count,NA,100*x/y,0,99,2.7,0.7,7.7,3.5,MDR_count,inci,3.5

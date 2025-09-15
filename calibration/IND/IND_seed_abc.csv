@@ -1,0 +1,2 @@
+uid,nhits,acqres,clinsub,comp_rt,cscal,dx_ageA0,eta,g,infclr,infnon,infsub,kA0,mort_nutmoderate,muDc,muDn,nonrec,nonsub,p,prog_ageA0,prog_nutmild,prog_nutmoderate,prog_nutover,relfit,relnon_r,relnon_s,relsub_r,relsub_s,subclin,subnon,succ_strs,t,unsucc_nutmoderate
+1,18,0.012,0.72,1.494633,2.2,0.35,0.73,3.428219092,1.315599835,0.0968,0.01,0.424,2.245249769,0.0859,0.01,0.152024,0.21,0.299953032,0.9,1.47,1.84,0.66,0.848,0.042272512,0.000508378,0.028816216,0.006388308,0.94,2,0.46,0.865810325,1.101

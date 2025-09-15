@@ -1,0 +1,29 @@
+country,year,xVXa,xSES,xRISK,xHIV,xTB,xtype ,xcause,yVXa,ySES,yRISK,yHIV,yTB,ytype,ycause,fn,age_from,age_thru,value,lo,hi,err,name,type,orig_err
+ZAF,2000.5,NA,NA,all,NA,"Dn_dead, Dc_dead",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,317,199,461,131,TB_mort_0_99,inci,131
+ZAF,2022.5,NA,NA,all,NA,"Dn_dead, Dc_dead",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,90,51,142,45.5,TB_mort_0_99,inci,45.5
+ZAF,2000.5,NA,NA,"HIVnt, HIVart",NA,"Dn_dead, Dc_dead",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,258,144,405,130.5,TB_morthiv_0_99,inci,130.5
+ZAF,2022.5,NA,NA,"HIVnt, HIVart",NA,"Dn_dead, Dc_dead",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,52,17,107,45,TB_morthiv_0_99,inci,45
+ZAF,2000.5,NA,NA,all,NA,"Not_N_count, Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,321,257,385,64,TB_not_0_99,inci,64
+ZAF,2022.5,NA,NA,all,NA,"Not_N_count, Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,14,97,77,116,19.5,TB_not_0_14,inci,19.5
+ZAF,2022.5,NA,NA,"HIVnt, HIVart",NA,"Not_N_count, Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,171,137,206,34.5,TB_nothiv_0_99,inci,34.5
+ZAF,2022.5,NA,NA,all,NA,"Not_N_count, Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,15,99,464,372,558,93,TB_not_15_99,inci,93
+ZAF,2019.5,NA,NA,all,NA,"Ds_s_N, Ds_r_N, Ds_s_P, Ds_r_P, Dc_s_N, Dc_r_N, Dc_s_P, Dc_r_P",stock,NA,NA,NA,all,NA,all,stock,NA,1e5*x/0.957/y,15,99,852,679,1026,173.5,TB_prev_15_99,prev,173.5
+ZAF,2019.5,NA,NA,all,NA,"Ds_s_N, Ds_r_N, Ds_s_P, Ds_r_P",stock,NA,NA,NA,all,NA,"Ds_s_N, Ds_r_N, Ds_s_P, Ds_r_P, Dc_s_N, Dc_r_N, Dc_s_P, Dc_r_P",stock,NA,100*x/y,15,99,57.7,51.4,64,6.3,Ds_pct,ratio,6.3
+ZAF,2000.5,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,100*x/y,0,14,0.9,0.5,1.2,0.35,HIV_prev_0_14,prev,0.35
+ZAF,2022.5,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,100*x/y,0,14,1.4,0.8,3.2,1.2,HIV_prev_0_14,prev,1.2
+ZAF,2000.5,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,100*x/y,15,99,10.1,6.1,13.8,3.85,HIV_prev_15_99,prev,3.85
+ZAF,2022.5,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,NA,NA,all,NA,all,stock,NA,100*x/y,15,99,16.1,11.3,20.4,4.55,HIV_prev_15_99,prev,4.55
+ZAF,2010.5,NA,NA,HIVart,NA,all,stock,NA,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,100*x/y,0,14,24,14,34,10,HIV_artcov_0_14,ratio,10
+ZAF,2022.5,NA,NA,HIVart,NA,all,stock,NA,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,100*x/y,0,14,54,34,100,33,HIV_artcov_0_14,ratio,33
+ZAF,2010.5,NA,NA,HIVart,NA,all,stock,NA,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,100*x/y,15,99,23,15,31,8,HIV_artcov_15_99,ratio,8
+ZAF,2022.5,NA,NA,HIVart,NA,all,stock,NA,NA,NA,"HIVnt, HIVart",NA,all,stock,NA,100*x/y,15,99,75,53,98,23,HIV_artcov_15_99,ratio,23
+ZAF,2000.5,NA,NA,HIVdead,NA,all,count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,289,162,445,141.5,HIV_mort_0_99,inci,141.5
+ZAF,2022.5,NA,NA,HIVdead,NA,all,count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,72,50,144,47,HIV_mort_0_99,inci,47
+ZAF,2000.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.923/y,0,99,762,416,1210,397,TB_inc_0_99,inci,397
+ZAF,2022.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.923/y,0,99,468,304,665,180.5,TB_inc_0_99,inci,180.5
+ZAF,2022.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.923/y,0,14,158,88,222,67,TB_inc_0_14,inci,67
+ZAF,2022.5,NA,NA,all,NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.923/y,15,99,597,343,848,252.5,TB_inc_15_99,inci,252.5
+ZAF,2000.5,NA,NA,"HIVnt, HIVart",NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.923/y,0,99,573,294,943,324.5,TB_inchiv_0_99,inci,324.5
+ZAF,2022.5,NA,NA,"HIVnt, HIVart",NA,Inc_Dc_count,count,NA,NA,NA,all,NA,all,stock,NA,(1e5*x*0.86)/0.923/y,0,99,255,166,362,98,TB_inchiv_0_99,inci,98
+ZAF,2022.5,NA,NA,all,NA,"Not_N_count, Not_P_count",count,NA,NA,NA,all,NA,all,stock,NA,1e5*x/y,0,99,344,275,413,69,TB_not_0_99,inci,69
+ZAF,2022.5,NA,NA,all,NA,"MDR_N_count, MDR_P_count",count,NA,NA,NA,all,NA,"Not_N_count, Not_P_count",count,NA,100*x/y,0,99,3.9,3.12,4.68,0.78,MDR_0_99,ratio,0.78
