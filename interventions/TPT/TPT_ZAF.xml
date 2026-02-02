@@ -152,6 +152,12 @@
       <VXa.parameter TB.state="RT_adult_count" name="startcontacts_IGRA" value="0"/>
       <VXa.parameter TB.state="ST_children_count" name="startcontacts_IGRA" value="0"/>   
       <VXa.parameter TB.state="RT_children_count" name="startcontacts_IGRA" value="0"/>
+      <VXa.parameter TB.state="ST_tpt_a1_count" name="startcontacts_IGRA" value="0"/>
+      <VXa.parameter TB.state="ST_tpt_a2_count" name="startcontacts_IGRA" value="0"/>
+      <VXa.parameter TB.state="ST_tpt_c_count" name="startcontacts_IGRA" value="0"/>
+      <VXa.parameter TB.state="RT_tpt_a1_count" name="startcontacts_IGRA" value="0"/>
+      <VXa.parameter TB.state="RT_tpt_a2_count" name="startcontacts_IGRA" value="0"/>
+      <VXa.parameter TB.state="RT_tpt_c_count" name="startcontacts_IGRA" value="0"/>
 
       <!--HH CONTACTS (I)-->
       <VXa.parameter TB.state="S_N"     name="startcontacts_noIGRA"   value="1"/>
@@ -245,6 +251,12 @@
       <VXa.parameter TB.state="RT_adult_count" name="startcontacts_noIGRA" value="0"/>
       <VXa.parameter TB.state="ST_children_count" name="startcontacts_noIGRA" value="0"/>   
       <VXa.parameter TB.state="RT_children_count" name="startcontacts_noIGRA" value="0"/>
+      <VXa.parameter TB.state="ST_tpt_a1_count" name="startcontacts_noIGRA" value="0"/>
+      <VXa.parameter TB.state="ST_tpt_a2_count" name="startcontacts_noIGRA" value="0"/>
+      <VXa.parameter TB.state="ST_tpt_c_count" name="startcontacts_noIGRA" value="0"/>
+      <VXa.parameter TB.state="RT_tpt_a1_count" name="startcontacts_noIGRA" value="0"/>
+      <VXa.parameter TB.state="RT_tpt_a2_count" name="startcontacts_noIGRA" value="0"/>
+      <VXa.parameter TB.state="RT_tpt_c_count" name="startcontacts_noIGRA" value="0"/>
 
       <constant.transition.matrix>
         <transition from="tptDS" to="none" rate="comp_DS_TPT"/>
@@ -253,23 +265,23 @@
       <transition.matrix name="startTPTDS_IGRApos" trigger="TB:ST_adult_count"> 
         <transition from="none" to="tptDS" rate="startcontacts_IGRA*tpt_children"/>
         <transition from="none" to="tptDS_count" rate="startcontacts_IGRA*tpt_children"/>
-	     <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*prop_IGRA*(1-prev_TB)"/>
+	     <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*prop_IGRA*(1-prev_TB)*8.789471"/>
       </transition.matrix> 
       <transition.matrix name="startTPTDR_IGRApos" trigger="TB:RT_adult_count"> 
         <transition from="none" to="tptDR" rate="startcontacts_IGRA*tpt_children"/>
         <transition from="none" to="tptDR_count" rate="startcontacts_IGRA*tpt_children"/>
-	    <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*prop_IGRA*(1-prev_TB)"/>
+	    <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*prop_IGRA*(1-prev_TB)*8.800739"/>
       </transition.matrix> 
 
       <transition.matrix name="startTPTDS_IGRAneg" trigger="TB:ST_adult_count"> 
         <transition from="none" to="tptDS" rate="startcontacts_noIGRA*tpt_children"/>
         <transition from="none" to="tptDS_count" rate="startcontacts_noIGRA*tpt_children"/>
-	      <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*(1-prop_IGRA)*(1-prev_TB)"/>
+	      <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*(1-prop_IGRA)*(1-prev_TB)*8.523933"/>
       </transition.matrix> 
       <transition.matrix name="startTPTDR_IGRAneg" trigger="TB:RT_adult_count"> 
         <transition from="none" to="tptDR" rate="startcontacts_noIGRA*tpt_children"/>
         <transition from="none" to="tptDR_count" rate="startcontacts_noIGRA*tpt_children"/>
-	      <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*(1-prop_IGRA)*(1-prev_TB)"/>
+	      <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*prop_tpt_comp*HH_children*(1-prop_IGRA)*(1-prev_TB)*8.534823"/>
       </transition.matrix> 
 
     </VXa.progression>
@@ -431,6 +443,12 @@
       <state name="RT_adult_count"/> 
       <state name="ST_children_count"/>
       <state name="RT_children_count"/> 
+      <state name="ST_tpt_a1_count"/>
+      <state name="ST_tpt_a2_count"/>
+      <state name="ST_tpt_c_count"/>
+      <state name="RT_tpt_a1_count"/>
+      <state name="RT_tpt_a2_count"/>
+      <state name="RT_tpt_c_count"/>
 
     </TB.states>
 
@@ -1143,10 +1161,10 @@
         <transition from="Dc_r_N"      to="ST_Dc_r"            rate="adults*dx_tpt"/> 
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DS-TB TREATMENT: NEVER TREATED-->
-        <transition from="Ds_s_N"      to="ST_count"       rate="adults*dx_tpt"/> 
-        <transition from="Ds_r_N"      to="ST_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_s_N"      to="ST_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_r_N"      to="ST_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_s_N"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_r_N"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_s_N"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_r_N"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/> 
         
         <!--INTERVENTION - HOUSEHOLD CONTACTS ON DS-TB TREATMENT: PREVIOUSLY TREATED-->
         <transition from="Ds_s_P"      to="ST_Ds_s"            rate="adults*dx_tpt"/>
@@ -1155,12 +1173,12 @@
         <transition from="Dc_r_P"      to="ST_Dc_r"            rate="adults*dx_tpt"/>
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DS-TB TREATMENT: PREVIOUSLY TREATED-->
-        <transition from="Ds_s_P"      to="ST_count"       rate="adults*dx_tpt"/>
-        <transition from="Ds_r_P"      to="ST_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_s_P"      to="ST_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_r_P"      to="ST_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_s_P"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_r_P"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_s_P"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_r_P"      to="ST_tpt_a1_count"       rate="adults*dx_tpt"/>
         
-        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*(HH_adults-1)*prev_TB"/>
+        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*(HH_adults-1)*prev_TB*2.177074"/>
       </transition.matrix>
 
       <transition.matrix name="HHC_treat_ST_adults_HHCchildren" trigger="TB:ST_children_count">
@@ -1171,10 +1189,10 @@
         <transition from="Dc_r_N"      to="ST_Dc_r"            rate="adults*dx_tpt"/> 
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DS-TB TREATMENT: NEVER TREATED-->
-        <transition from="Ds_s_N"      to="ST_count"       rate="adults*dx_tpt"/> 
-        <transition from="Ds_r_N"      to="ST_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_s_N"      to="ST_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_r_N"      to="ST_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_s_N"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_r_N"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_s_N"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_r_N"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/> 
         
         <!--INTERVENTION - HOUSEHOLD CONTACTS ON DS-TB TREATMENT: PREVIOUSLY TREATED-->
         <transition from="Ds_s_P"      to="ST_Ds_s"            rate="adults*dx_tpt"/>
@@ -1183,12 +1201,12 @@
         <transition from="Dc_r_P"      to="ST_Dc_r"            rate="adults*dx_tpt"/>
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DS-TB TREATMENT: PREVIOUSLY TREATED-->
-        <transition from="Ds_s_P"      to="ST_count"       rate="adults*dx_tpt"/>
-        <transition from="Ds_r_P"      to="ST_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_s_P"      to="ST_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_r_P"      to="ST_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_s_P"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_r_P"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_s_P"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_r_P"      to="ST_tpt_a2_count"       rate="adults*dx_tpt"/>
         
-        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_adults*prev_TB"/>
+        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_adults*prev_TB*2.207609"/>
       </transition.matrix>
 
       <transition.matrix name="HHC_treat_ST_children" trigger="TB:ST_adult_count">
@@ -1199,10 +1217,10 @@
         <transition from="Dc_r_N"      to="ST_Dc_r"            rate="(1-adults)*dx_tpt"/> 
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DS-TB TREATMENT: NEVER TREATED-->
-        <transition from="Ds_s_N"      to="ST_count"       rate="(1-adults)*dx_tpt"/> 
-        <transition from="Ds_r_N"      to="ST_count"       rate="(1-adults)*dx_tpt"/> 
-        <transition from="Dc_s_N"      to="ST_count"       rate="(1-adults)*dx_tpt"/> 
-        <transition from="Dc_r_N"      to="ST_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Ds_s_N"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Ds_r_N"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Dc_s_N"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Dc_r_N"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
         
         <!--INTERVENTION - HOUSEHOLD CONTACTS ON DS-TB TREATMENT: PREVIOUSLY TREATED-->
         <transition from="Ds_s_P"      to="ST_Ds_s"            rate="(1-adults)*dx_tpt"/>
@@ -1211,12 +1229,12 @@
         <transition from="Dc_r_P"      to="ST_Dc_r"            rate="(1-adults)*dx_tpt"/>
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DS-TB TREATMENT: PREVIOUSLY TREATED-->
-        <transition from="Ds_s_P"      to="ST_count"       rate="(1-adults)*dx_tpt"/>
-        <transition from="Ds_r_P"      to="ST_count"       rate="(1-adults)*dx_tpt"/>
-        <transition from="Dc_s_P"      to="ST_count"       rate="(1-adults)*dx_tpt"/>
-        <transition from="Dc_r_P"      to="ST_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Ds_s_P"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Ds_r_P"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Dc_s_P"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Dc_r_P"      to="ST_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
         
-        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_children*prev_TB"/>
+        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_children*prev_TB*24.79386"/>
       </transition.matrix>
 
       <transition.matrix name="initRT" after.test="irelinit_RT">
@@ -1332,10 +1350,10 @@
         <transition from="Dc_r_N"      to="RT_Dc_r"            rate="adults*dx_tpt"/> 
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DR-TB TREATMENT: NEVER TREATED-->
-        <transition from="Ds_s_N"      to="RT_count"       rate="adults*dx_tpt"/> 
-        <transition from="Ds_r_N"      to="RT_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_s_N"      to="RT_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_r_N"      to="RT_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_s_N"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_r_N"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_s_N"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_r_N"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/> 
         
         <!--INTERVENTION - HOUSEHOLD CONTACTS ON DR-TB TREATMENT: PREVIOUSLY TREATED-->
         <transition from="Ds_s_P"      to="RT_Ds_s"            rate="adults*dx_tpt"/>
@@ -1344,12 +1362,12 @@
         <transition from="Dc_r_P"      to="RT_Dc_r"            rate="adults*dx_tpt"/>
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DR-TB TREATMENT: PREVIOUSLY TREATED-->
-        <transition from="Ds_s_P"      to="RT_count"       rate="adults*dx_tpt"/>
-        <transition from="Ds_r_P"      to="RT_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_s_P"      to="RT_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_r_P"      to="RT_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_s_P"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_r_P"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_s_P"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_r_P"      to="RT_tpt_a1_count"       rate="adults*dx_tpt"/>
         
-        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*(HH_adults-1)*prev_TB"/>
+        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*(HH_adults-1)*prev_TB*2.177074"/>
       </transition.matrix>
 
       <transition.matrix name="HHC_treat_RT_adults_HHCchild" trigger="TB:RT_children_count"> 
@@ -1360,10 +1378,10 @@
         <transition from="Dc_r_N"      to="RT_Dc_r"            rate="adults*dx_tpt"/> 
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DR-TB TREATMENT: NEVER TREATED-->
-        <transition from="Ds_s_N"      to="RT_count"       rate="adults*dx_tpt"/> 
-        <transition from="Ds_r_N"      to="RT_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_s_N"      to="RT_count"       rate="adults*dx_tpt"/> 
-        <transition from="Dc_r_N"      to="RT_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_s_N"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/> 
+        <transition from="Ds_r_N"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_s_N"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/> 
+        <transition from="Dc_r_N"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/> 
         
         <!--INTERVENTION - HOUSEHOLD CONTACTS ON DR-TB TREATMENT: PREVIOUSLY TREATED-->
         <transition from="Ds_s_P"      to="RT_Ds_s"            rate="adults*dx_tpt"/>
@@ -1372,12 +1390,12 @@
         <transition from="Dc_r_P"      to="RT_Dc_r"            rate="adults*dx_tpt"/>
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DR-TB TREATMENT: PREVIOUSLY TREATED-->
-        <transition from="Ds_s_P"      to="RT_count"       rate="adults*dx_tpt"/>
-        <transition from="Ds_r_P"      to="RT_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_s_P"      to="RT_count"       rate="adults*dx_tpt"/>
-        <transition from="Dc_r_P"      to="RT_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_s_P"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/>
+        <transition from="Ds_r_P"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_s_P"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/>
+        <transition from="Dc_r_P"      to="RT_tpt_a2_count"       rate="adults*dx_tpt"/>
         
-        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_adults*prev_TB"/>
+        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_adults*prev_TB*2.207609"/>
       </transition.matrix> 
 
       <transition.matrix name="HHC_treat_RT_children_HHCadults" trigger="TB:RT_adults_count">
@@ -1388,10 +1406,10 @@
         <transition from="Dc_r_N"      to="RT_Dc_r"            rate="(1-adults)*dx_tpt"/> 
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DR-TB TREATMENT: NEVER TREATED-->
-        <transition from="Ds_s_N"      to="RT_count"       rate="(1-adults)*dx_tpt"/> 
-        <transition from="Ds_r_N"      to="RT_count"       rate="(1-adults)*dx_tpt"/> 
-        <transition from="Dc_s_N"      to="RT_count"       rate="(1-adults)*dx_tpt"/> 
-        <transition from="Dc_r_N"      to="RT_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Ds_s_N"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Ds_r_N"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Dc_s_N"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
+        <transition from="Dc_r_N"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/> 
         
         <!--INTERVENTION - HOUSEHOLD CONTACTS ON DR-TB TREATMENT: PREVIOUSLY TREATED-->
         <transition from="Ds_s_P"      to="RT_Ds_s"            rate="(1-adults)*dx_tpt"/>
@@ -1400,12 +1418,12 @@
         <transition from="Dc_r_P"      to="RT_Dc_r"            rate="(1-adults)*dx_tpt"/>
 
         <!--INTERVENTION - HOUSEHOLD CONTACTS STARTING DR-TB TREATMENT: PREVIOUSLY TREATED-->
-        <transition from="Ds_s_P"      to="RT_count"       rate="(1-adults)*dx_tpt"/>
-        <transition from="Ds_r_P"      to="RT_count"       rate="(1-adults)*dx_tpt"/>
-        <transition from="Dc_s_P"      to="RT_count"       rate="(1-adults)*dx_tpt"/>
-        <transition from="Dc_r_P"      to="RT_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Ds_s_P"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Ds_r_P"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Dc_s_P"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
+        <transition from="Dc_r_P"      to="RT_tpt_c_count"       rate="(1-adults)*dx_tpt"/>
         
-        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_children*prev_TB"/>
+        <multiplier name="tptmult" times="2000,2025,2030" values="0,0,int_cov*HH_children*prev_TB*24.79386"/>
         </transition.matrix> 
 
       <transition.matrix name="init" after.test="irelinit">
