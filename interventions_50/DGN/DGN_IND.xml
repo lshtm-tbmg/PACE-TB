@@ -389,44 +389,44 @@
           <TB.state.tested name="C_N"    fraction.positive="1"/>
           <TB.state.tested name="S_P"    fraction.positive="1"/>
           <TB.state.tested name="C_P"    fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.0294,0.0294,0.0140"/>
+          <multiplier name="mult" times="1900,2025,2030" values="0.0294,0.0294,0.0288"/>
         </test>
         <test name="itestpos_R"> 
           <TB.state.tested name="R_N"    fraction.positive="1"/>
           <TB.state.tested name="R_P"    fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.0821,0.0821,0.047"/> 
+          <multiplier name="mult" times="1900,2025,2030" values="0.0821,0.0821,0.0746"/> 
         </test>
         <test name="itestpos_I"> 
           <TB.state.tested name="I_s_N"  fraction.positive="1"/>
           <TB.state.tested name="I_r_N"  fraction.positive="1"/>
           <TB.state.tested name="I_s_P"  fraction.positive="1"/>
           <TB.state.tested name="I_r_P"  fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.0294,0.0294,0.0140"/> 
+          <multiplier name="mult" times="1900,2025,2030" values="0.0294,0.0294,0.0288"/> 
         </test>
         <test name="itestpos_Dn"> 
           <TB.state.tested name="Dn_s_N" fraction.positive="1"/>
           <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
           <TB.state.tested name="Dn_s_P" fraction.positive="1"/>
           <TB.state.tested name="Dn_r_P" fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.1307,0.1307,0.08"/> 
+          <multiplier name="mult" times="1900,2025,2030" values="0.1307,0.1307,0.1039"/> 
         </test>
         <test name="itestpos_Ds"> 
           <TB.state.tested name="Ds_s_N" fraction.positive="1"/>
           <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
           <TB.state.tested name="Ds_s_P" fraction.positive="1"/>
           <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.3549,0.3549,0.525"/> 
+          <multiplier name="mult" times="1900,2025,2030" values="0.3549,0.3549,0.4136"/> 
         </test>
         <test name="itestpos_Dc"> 
           <TB.state.tested name="Dc_s_N" fraction.positive="1"/>
           <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
           <TB.state.tested name="Dc_s_P" fraction.positive="1"/>
           <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.7599,0.7599,0.8189"/> 
+          <multiplier name="mult" times="1900,2025,2030" values="0.7599,0.7599,0.7803"/> 
         </test>
         <test name="itestpos_Tc"> 
           <TB.state.tested name="Tc_P"   fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2025,2030" values="0.2778,0.2778,0.1340"/> 
+          <multiplier name="mult" times="1900,2025,2030" values="0.2778,0.2778,0.2703"/> 
         </test>
 
         <!--INTERVENTION - TREATMENT ACCEPTANCE: NEVER TREATED AND PREVIOUSLY TREATED-->

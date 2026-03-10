@@ -532,7 +532,7 @@
           <TB.state.tested name="Dn_r_N" fraction.positive="1"/>
           <TB.state.tested name="Ds_r_N" fraction.positive="1"/>
           <TB.state.tested name="Dc_r_N" fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2024.999,2025" values="dst_n,dst_n,0.5"/> 
+          <multiplier name="mult" times="1900,2024.999,2025" values="dst_n,dst_n,0.8"/> 
         </test>
         <test name="idst_p"> 
           <TB.state.tested name="S_P"    fraction.positive="1"/>
@@ -547,7 +547,7 @@
           <TB.state.tested name="Ds_r_P" fraction.positive="1"/>
           <TB.state.tested name="Dc_r_P" fraction.positive="1"/>
           <TB.state.tested name="Tc_P"   fraction.positive="1"/>
-          <multiplier name="mult" times="1900,2024.999,2025" values="dst_p,dst_p,0.5"/>
+          <multiplier name="mult" times="1900,2024.999,2025" values="dst_p,dst_p,0.8"/>
         </test>
 
         <!--INTERVENTION - DRUG-SUSCEPTIBILITY POSITIVITY-->
