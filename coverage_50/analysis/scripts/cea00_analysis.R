@@ -274,7 +274,7 @@ for (intv in 1:length(intvs)) {
           cea[[iso]][[intv]][["c_Int"]][yr, run] <- 
             (data_temp[["n_assess_y"]][yr, run] * cost[cost$uid == uid, "c_a_diag_standard"] + # Cost of standard evaluation
                data_temp[["n_treat_DS_y"]][yr, run] * ((1 - (0.10 * yr)) * cost[cost$uid == uid, "c_a_treat_DS_standard"] + (0.10 * yr) * cost[cost$uid == uid, "c_a_treat_DS_improved"]) + # Cost of improved and standard DS treatment
-               data_temp[["n_treat_DR_y"]][yr, run] * cost[cost$uid == uid, "c_a_treat_DR_standard"]) # Cost of DR treatment
+               data_temp[["n_treat_DR_y"]][yr, run] * cost[cost$uid == uid, "c_a_treat_DR_standard"]) * # Cost of DR treatment
             (1 + he_temp[["disc_rate"]]["disc", ])^(-(yr - 1)) # Discounting
           
         } else {
@@ -282,7 +282,7 @@ for (intv in 1:length(intvs)) {
           cea[[iso]][[intv]][["c_Int"]][yr, run] <- 
             (data_temp[["n_assess_y"]][yr, run] * cost[cost$uid == uid, "c_a_diag_standard"] + # Cost of standard evaluation
                data_temp[["n_treat_DS_y"]][yr, run] * (0.5 * cost[cost$uid == uid, "c_a_treat_DS_standard"] + 0.5 * cost[cost$uid == uid, "c_a_treat_DS_improved"]) + # Cost of improved and standard DS treatment
-               data_temp[["n_treat_DR_y"]][yr, run] * cost[cost$uid == uid, "c_a_treat_DR_standard"]) # Cost of DR treatment
+               data_temp[["n_treat_DR_y"]][yr, run] * cost[cost$uid == uid, "c_a_treat_DR_standard"]) * # Cost of DR treatment
           (1 + he_temp[["disc_rate"]]["disc", ])^(-(yr - 1)) # Discounting
         }
       }
