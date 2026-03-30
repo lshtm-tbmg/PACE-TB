@@ -315,6 +315,7 @@ for (i in 1:length(files)) {
     filter(year >= 2026) %>% 
     filter((str_detect(TB, 'ST') & str_detect(TB, 'count'))) %>% 
     filter(!(str_detect(TB, 'succ'))) %>% 
+    filter(!(str_detect(TB, 'adult'))) %>%  
     filter(!(str_detect(RISK, 'dead') | str_detect(RISK, 'count'))) %>% 
     filter(!(str_detect(VXa, 'dead') | str_detect(VXa, 'count'))) %>% 
     filter((age_from == 0 & age_thru == 99)) %>% 
@@ -355,6 +356,7 @@ for (i in 1:length(files)) {
       filter(year >= 2026) %>% 
       filter((str_detect(TB, 'RT') & str_detect(TB, 'count'))) %>% 
       filter(!(str_detect(TB, 'succ'))) %>% 
+      filter(!(str_detect(TB, 'adult'))) %>%  
       filter(!(str_detect(RISK, 'dead') | str_detect(RISK, 'count'))) %>%
       filter(!(str_detect(VXa, 'dead') | str_detect(VXa, 'count'))) %>% 
       filter((age_from == 0 & age_thru == 99)) %>% 
