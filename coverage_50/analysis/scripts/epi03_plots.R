@@ -38,18 +38,33 @@ intv_col2 <- c("BAU" = "black", "Vacc" = "#537D8D", "TPT" = "#CB4C15",
                "Short DS" = "#AE0D0A", "Short DR" = "#2C6E49", "Pri Scr" = "#545454", "Nutr" = "#8A8A8A") 
 intv_ord2  <- c("BAU","VAX", "TPT", "SCR", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
 intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all", 
-               "Short DS", "Short DR", "Pri Scr", "Nutr")
+                "Short DS", "Short DR", "Pri Scr", "Nutr")
 
 ## EPI1 - PREVALENCE ## 
 
 # Epi1Fig1: Proportional decline in infectious TB prevalence in 2050 (relative to BAU)    
+  temp <- episumm %>%
+    filter(var == "prev", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi1fig1_prev_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "prev", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = -upp, ymax = -low), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=1.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "top") +
     scale_y_continuous(#lim = c(-0.5, 0), 
@@ -68,16 +83,32 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
    
 # Epi1Fig2: Proportional decline in infectious TB prevalence in 2050 (relative to BAU) by intervention
+  temp <- episumm %>%
+    filter(var == "prev", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi1fig2_prevbyint_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "prev", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(intv, levels = intv_ord, labels = intv_name), space = "free", scales = "free_x") + #, labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(iso,levels=c("BRA","IND","ZAF")), y = -med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(iso,levels=c("BRA","IND","ZAF")), ymin = -upp, ymax = -low), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(iso,levels=c("BRA","IND","ZAF")), y = -med, label = text), vjust=1.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "top") +
-    scale_y_continuous(lim = c(-0.55, 0), expand=c(0, 0),
+    scale_y_continuous(#lim = c(-0.55, 0), 
+                       expand=c(0, 0),
                        labels = scales::label_number(scale = 100, suffix = '%')) +
     labs(x = NULL, y = "Proportion relative to BAU", fill = "Intervention") +
     theme_classic(base_size = 18) +
@@ -117,6 +148,9 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
     mutate(BRA = ifelse(BRA == 'NA%\n(NA-NA%)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NA%\n(NA-NA%)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NA%\n(NA-NA%)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(prevt2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -133,13 +167,28 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
 ## EPI2 - INCIDENT EPISODES ##
     
 # Epi2Fig1: Incident symptomatic TB episodes averted by 2050 (relative to BAU)
+  temp <- episumm %>%
+    filter(var == "inc", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi2fig1_inc_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "inc", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(expand = c(0, 0), labels = scales::label_number(scale = 1e-6, suffix = 'M')) +
@@ -156,40 +205,34 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
 
 # Epi2Fig2: Incident symptomatic TB episodes averted by 2050 (relative to BAU) 
-  episummtemp <- episumm
-  
-  high_inc <- which(episummtemp$var == "inc" & episummtemp$med > 1800000)
-  
-  if (length(high_inc) > 0) {
-    og_values <- episummtemp$med[high_inc]
-    episummtemp$med[high_inc] <- 1750000
-    episummtemp$low[high_inc] <- NA
-    episummtemp$upp[high_inc] <- NA
-    
-    intv_mapping <- setNames(seq_along(intv_ord), intv_ord)
-    
-    anntext <- data.frame(x = intv_mapping[episummtemp$intv[high_inc]], y = 1800000,
-                          label = paste0(format(round(og_values / 1e6, digits = 1), big.mark = ",", scientific = FALSE), "M"), 
-                          iso = episummtemp$iso[high_inc])
-    
-    anntext["NTN","x"] <- anntext["NTN","x"]-1 # Quick fix to align NTN
-    
-  } else {
-    anntext <- data.frame(x = character(0), y = numeric(0), label = character(0), iso = character(0))
-  }
-  
+  temp <- episumm %>%
+    filter(var == "inc", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi2fig2_inc_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episummtemp, var == "inc", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
-    scale_y_continuous(lim = c(0, 1.85e6), expand=c(0, 0),
+    scale_y_continuous(#lim = c(0, 1.85e6), 
+                       expand=c(0, 0),
                        labels = scales::label_number(scale = 1e-6, suffix = 'M')) +
-    geom_text(data = anntext, aes(x = x, y = y, label = label), inherit.aes = FALSE) +
+    #geom_text(data = anntext, aes(x = x, y = y, label = label), inherit.aes = FALSE) +
     labs(x = NULL, y = "Number relative to BAU", fill = "Intervention") +
     theme_classic(base_size = 18) +
     theme(plot.title = element_text(hjust = 0.5),
@@ -202,13 +245,28 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
         
 # Epi2Fig3: Proportion of incident symptomatic TB episodes (relative to BAU)
+  temp <- episumm %>%
+    filter(var == "incpct", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi2fig3_",format(Sys.time(), "%Y%m%d_%H-%M"),"incpct.png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "incpct", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(expand = c(0, 0),
@@ -225,13 +283,28 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
         
 # Epi2Fig4: Proportion of incident symptomatic TB episodes (relative to BAU) by intervention 
+  temp <- episumm %>%
+    filter(var == "incpct", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi2fig4_incpctbyint_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "incpct", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(intv, levels = intv_ord, labels = intv_name), space = "free", scales = "free_x") +
     geom_col(aes(x = factor(iso,levels=c("BRA","IND","ZAF")), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(iso,levels=c("BRA","IND","ZAF")), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(iso,levels=c("BRA","IND","ZAF")), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(expand = c(0, 0),
@@ -273,6 +346,9 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
     mutate(BRA = ifelse(BRA == 'NAK\n(NA-NAK)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAK\n(NA-NAK)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAK\n(NA-NAK)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(inct2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -312,6 +388,9 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
     mutate(BRA = ifelse(BRA == 'NA%\n(NA-NA%)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NA%\n(NA-NA%)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NA%\n(NA-NA%)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(inct2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -328,13 +407,28 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
 ## EPI3 - DEATHS ##
 
 # Epi3Fig1: TB deaths averted by 2050 (relative to BAU)
+  temp <- episumm %>%
+    filter(var == "death", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi3fig1_death_",format(Sys.time(), "%Y%m%d_%H-%M"), ".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "death", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(expand=c(0,0), labels = scales::label_number(scale = 1e-6, suffix = 'M')) +
@@ -351,40 +445,34 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
 
 # Epi3Fig2: TB deaths averted by 2050 (relative to BAU) - For results 05/03
-  episummtemp <- episumm
-  
-  high_deaths <- which(episummtemp$var == "death" & episummtemp$med > 380000)
-  
-  if (length(high_deaths) > 0) {
-    og_values <- episummtemp$med[high_deaths]
-    episummtemp$med[high_deaths] <- 365000
-    episummtemp$low[high_deaths] <- NA
-    episummtemp$upp[high_deaths] <- NA
-    
-    intv_mapping <- setNames(seq_along(intv_ord), intv_ord)
-    
-    anntext <- data.frame(x = intv_mapping[episummtemp$intv[high_deaths]], y = 375000,
-                          label = paste0(format(round(og_values / 1e6, digits = 1), big.mark = ",", scientific = FALSE), "M"), 
-                          iso = episummtemp$iso[high_deaths])
-  
-    anntext[2,"x"] <- anntext[2,"x"]-1 # Quick fix to align NTN
-    
-  } else {
-    anntext <- data.frame(x = character(0), y = numeric(0), label = character(0), iso = character(0))
-  }
-  
+  temp <- episumm %>%
+    filter(var == "death", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi3fig2_death_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episummtemp, var == "death", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scale = 'free_x', labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
-    scale_y_continuous(expand = c(0, 0), lim = c(0, 380000),
+    scale_y_continuous(expand = c(0, 0), 
+                       #lim = c(0, 380000),
                        labels = scales::label_number(scale = 1e-6, suffix = 'M')) +
-    geom_text(data = anntext, aes(x = x, y = y, label = label), inherit.aes = FALSE) +
+    #geom_text(data = anntext, aes(x = x, y = y, label = label), inherit.aes = FALSE) +
     labs(x = NULL, y = "Number relative to BAU", fill = "Intervention") +
     theme_classic(base_size = 18) +
     theme(plot.title = element_text(hjust = 0.5),
@@ -397,13 +485,28 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
 
 # Epi3Fig3: Proportional TB deaths (relative to BAU) - For results 10/03
+  temp <- episumm %>%
+    filter(var == "deathpct", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi3fig3_deathpct_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "deathpct", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(iso,levels=c("BRA","IND","ZAF")), space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(expand = c(0, 0),
@@ -420,13 +523,28 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
       
 # Epi3Fig4: Proportional TB deaths (relative to BAU) by intervention - For results 10/03
+  temp <- episumm %>%
+    filter(var == "deathpct", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
   png(here('outputs', 'res', 'plots', paste("epi3fig4_deathpctbyint_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(episumm, var == "deathpct", intv != "BAU")) +
+  ggplot(temp) +
     facet_grid(~factor(intv, levels = intv_ord, labels = intv_name), space = "free", scales = "free_x") +
     geom_col(aes(x = factor(iso,levels=c("BRA","IND","ZAF")), y = med, fill = intv), position = position_dodge(width = 1)) + 
     geom_errorbar(aes(x = factor(iso,levels=c("BRA","IND","ZAF")), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, size = 1) +
+    geom_text(data=temp_na, aes(x = factor(iso,levels=c("BRA","IND","ZAF")), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(expand = c(0, 0),
@@ -468,6 +586,9 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
     mutate(BRA = ifelse(BRA == 'NAK\n(NA-NAK)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAK\n(NA-NAK)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAK\n(NA-NAK)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(deatht2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -507,6 +628,9 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
     mutate(BRA = ifelse(BRA == 'NA%\n(NA-NA%)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NA%\n(NA-NA%)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NA%\n(NA-NA%)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(deatht2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -547,7 +671,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   
   
 # Epi4Fig1: Change in prevalence over time (raw)
-  prevtime_bra <- ggplot(filter(episumm, var == "prevtimeraw", iso == "BRA")) +
+  prevtime_bra <- ggplot(filter(episumm, var == "prevtimeraw", iso == "BRA", !intv %in% c("DGN"))) +
                   geom_line(aes(x=year,y=med,col=intv),size=1) +
                   geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                   geom_line(data=filter(episumm, var == "prevtimeraw", iso == "BRA", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
@@ -565,7 +689,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
                         plot.margin = margin(0, 0.6, 0, 0, "cm"),
                         strip.background.x = element_rect(color = "white", fill = NULL), 
                         strip.text = element_text(size = 18))
-  prevtime_ind <- ggplot(filter(episumm, var == "prevtimeraw", iso == "IND")) +
+  prevtime_ind <- ggplot(filter(episumm, var == "prevtimeraw", iso == "IND", !intv %in% c("DST"))) +
                   geom_line(aes(x=year,y=med,col=intv),size=1) +
                   geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                   geom_line(data=filter(episumm, var == "prevtimeraw", iso == "IND", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
@@ -583,7 +707,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
                         plot.margin = margin(0, 0.6, 0, 0, "cm"),
                         strip.background.x = element_rect(color = "white", fill = NULL), 
                         strip.text = element_text(size = 18))
-  prevtime_zaf <- ggplot(filter(episumm, var == "prevtimeraw", iso == "ZAF")) +
+  prevtime_zaf <- ggplot(filter(episumm, var == "prevtimeraw", iso == "ZAF", !intv %in% c("DGN","DST"))) +
                   geom_line(aes(x=year,y=med,col=intv),size=1) +
                   geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                   geom_line(data=filter(episumm, var == "prevtimeraw", iso == "ZAF", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
@@ -608,7 +732,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
 
   # Epi4Fig2: Change in incidence (sTB) over time
-  inctime_bra <- ggplot(filter(episumm, var == "inctimestb", iso == "BRA")) +
+  inctime_bra <- ggplot(filter(episumm, var == "inctimestb", iso == "BRA", !intv %in% c("DGN"))) +
                  geom_line(aes(x=year,y=med,col=intv),size=1) +
                  geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                  geom_errorbar(aes(x=2022,ymin=37,ymax=51),colour="black",size=1) +
@@ -627,7 +751,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
                        plot.margin = margin(0, 0.6, 0, 0, "cm"),
                        strip.background.x = element_rect(color = "white", fill = NULL), 
                        strip.text = element_text(size = 18))
-  inctime_ind <- ggplot(filter(episumm, var == "inctimestb", iso == "IND")) +
+  inctime_ind <- ggplot(filter(episumm, var == "inctimestb", iso == "IND", !intv %in% c("DST"))) +
                  geom_line(aes(x=year,y=med,col=intv),size=1) +
                  geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                  geom_errorbar(aes(x=2022,ymin=139,ymax=189),colour="black",size=1) +
@@ -645,7 +769,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
                        plot.margin = margin(0, 0.6, 0, 0, "cm"),
                        strip.background.x = element_rect(color = "white", fill = NULL), 
                        strip.text = element_text(size = 18))
-  inctime_zaf <- ggplot(filter(episumm, var == "inctimestb", iso == "ZAF")) +
+  inctime_zaf <- ggplot(filter(episumm, var == "inctimestb", iso == "ZAF", !intv %in% c("DGN","DST"))) +
                  geom_line(aes(x=year,y=med,col=intv),size=1) +
                  geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                  geom_errorbar(aes(x=2022,ymin=280,ymax=614),colour="black",size=1) +
@@ -669,7 +793,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   dev.off()
   
 # Epi4Fig3: Change in mortality over time
-  morttime_bra <- ggplot(filter(episumm, var == "morttime", iso == "BRA")) +
+  morttime_bra <- ggplot(filter(episumm, var == "morttime", iso == "BRA", !intv %in% c("DGN"))) +
                   geom_line(aes(x=year,y=med,col=intv),size=1) +
                   geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                   geom_line(data=filter(episumm, var == "morttime", iso == "BRA", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
@@ -686,7 +810,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
                         plot.margin = margin(0, 0.6, 0, 0, "cm"),
                         strip.background.x = element_rect(color = "white", fill = NULL), 
                         strip.text = element_text(size = 18))
-  morttime_ind <- ggplot(filter(episumm, var == "morttime", iso == "IND")) +
+  morttime_ind <- ggplot(filter(episumm, var == "morttime", iso == "IND", !intv %in% c("DST"))) +
                   geom_line(aes(x=year,y=med,col=intv),size=1) +
                   geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                   geom_line(data=filter(episumm, var == "morttime", iso == "IND", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
@@ -703,7 +827,7 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
                         plot.margin = margin(0, 0.6, 0, 0, "cm"),
                         strip.background.x = element_rect(color = "white", fill = NULL), 
                         strip.text = element_text(size = 18))
-  morttime_zaf <- ggplot(filter(episumm, var == "morttime", iso == "ZAF")) +
+  morttime_zaf <- ggplot(filter(episumm, var == "morttime", iso == "ZAF", !intv %in% c("DGN","DST"))) +
                   geom_line(aes(x=year,y=med,col=intv),size=1) +
                   geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.15) +
                   geom_line(data=filter(episumm, var == "morttime", iso == "ZAF", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +

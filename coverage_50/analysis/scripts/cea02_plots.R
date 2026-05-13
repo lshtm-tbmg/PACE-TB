@@ -25,7 +25,7 @@ suppressPackageStartupMessages({
 rm(list = ls())
 
 # Load the file
-cea <- as.data.table(read_fst(here("outputs", "res", "summ", "ceasumm.fst")))
+cea <- as.data.table(read_fst(here("outputs", "res", "summ", "ceasumm_cov50_20260427.fst")))
 cea_mean <- cea # For summaries using mean and local currency (see end of script)
 
 # Summarise runs using medians
@@ -45,9 +45,9 @@ intv_ord  <- c("VAX", "TPT", "SCRhi", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI"
 intv_name <- c("Vacc", "TPT", "Comm\nScr\n(high)", "Comm\nScr\n(low)",
                "Impr\nDiag", "DST\nfor all", "Short\nDS", "Short\nDR", "Pri\nScr", "Nutr")
 intv_col2 <- c("BAU" = "#C0C0C0", "Vacc" = "#537D8D", "TPT" = "#CB4C15", 
-              "Comm Scr (high)" = "#754668", "Comm Scr (low)" = "#754668", 
-              "Impr Diag" = "#CBA715", "DST for all" = "#1F4E79", "Pri Scr" = "#545454", 
-              "Short DS" = "#AE0D0A", "Short DR" = "#2C6E49", "Nutr" = "#8A8A8A") 
+               "Comm Scr (high)" = "#754668", "Comm Scr (low)" = "#754668", 
+               "Impr Diag" = "#CBA715", "DST for all" = "#1F4E79", "Pri Scr" = "#545454", 
+               "Short DS" = "#AE0D0A", "Short DR" = "#2C6E49", "Nutr" = "#8A8A8A") 
 intv_name2 <- c("Vacc", "TPT", "Comm Scr (high)", "Comm Scr (low)", 
                 "Impr Diag", "DST for all", "Short DS", "Short DR", "Pri Scr", "Nutr")
 intv_col3 <- c("BAU" = "#C0C0C0", "Vacc" = "#537D8D", "TPT" = "#CB4C15", 
@@ -59,16 +59,35 @@ intv_name3 <- c("Vacc", "TPT", "Comm Scr (low)",
 intv_ord3  <- c("VAX", "TPT", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
 intv_ord4  <- c("BAU","VAX", "TPT", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
 intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr", 
-               "Impr\nDiag", "DST\nfor all", "Short\nDS", "Short\nDR", "Pri\nScr", "Nutr")
+                "Impr\nDiag", "DST\nfor all", "Short\nDS", "Short\nDR", "Pri\nScr", "Nutr")
+intv_ord5  <- c("BAU","VAX", "TPT", "SCRhi", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
+intv_name5 <- c("BAU","Vacc", "TPT", "Comm\nScr (high)", "Comm\nScr (low)", 
+                "Impr\nDiag", "DST\nfor all", "Short\nDS", "Short\nDR", "Pri\nScr", "Nutr")
+
 
 # Cea1Fig1: Incremental budget (relative to BAU)
-  png(here('outputs', 'res', 'plots', paste0("cea1fig1_incbudget_",format(Sys.time(),"%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
-  ggplot(filter(cea, var == "Inc_costs", intv != "BAU")) +
+temp <- cea %>%
+  filter(var == "Inc_costs", intv != "BAU") %>%
+  mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+         low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+         upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+         med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+         low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+         upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+temp_na <- data.frame(
+  intv = c("DGN","DGN","DST","DST"),
+  iso  = c("BRA","ZAF","IND","ZAF"),
+  med  = c(0,0,0,0),
+  text = c("NA" ,"NA" ,"NA" ,"NA" )
+)
+png(here('outputs', 'res', 'plots', paste0("cea1fig1_incbudget_",format(Sys.time(),"%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
+  ggplot(temp) +
     facet_grid(~iso, space = "free", scales = "free_x", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_col(aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = med, fill = intv), position = position_dodge(width = 1)) +
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp),
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, linewidth = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     scale_fill_manual(values = intv_col) +
     scale_x_discrete(position = "bottom") +
     scale_y_continuous(labels = scales::label_number(scale = 1e-9, suffix = 'B')) +
@@ -84,7 +103,21 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   dev.off()
 
 # Cea1Fig2: Incremental budget (relative to BAU)
-  ceatemp <- cea
+  temp <- cea %>%
+    filter(var == "Inc_costs", intv != "BAU") %>%
+    mutate(med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, med),med),
+           low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, upp),upp),
+           med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, med),med),
+           low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, low),low),
+           upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, upp),upp))
+  temp_na <- data.frame(
+    intv = c("DGN","DGN","DST","DST"),
+    iso  = c("BRA","ZAF","IND","ZAF"),
+    med  = c(0,0,0,0),
+    text = c("NA" ,"NA" ,"NA" ,"NA" )
+  )
+  ceatemp <- temp
   high_costs <- which(ceatemp$var == "Inc_costs" & ceatemp$med > 19e9)
   if (length(high_costs) > 0) {
     og_values <- ceatemp$med[high_costs]
@@ -116,6 +149,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     geom_errorbar(aes(x = factor(intv, levels = intv_ord, labels = intv_name), ymin = low, ymax = upp), 
                   position = position_dodge(width = 1), width = 0.5, size = 0.5) +
     geom_hline(yintercept = 0, linewidth = 1) +
+    geom_text(data=temp_na, aes(x = factor(intv, levels = intv_ord, labels = intv_name), y = -med, label = text), vjust=-0.5) +
     geom_segment(arrows,mapping = aes(x = factor(intv, levels = intv_ord, labels = intv_name),
                                       xend = factor(intv, levels = intv_ord, labels = intv_name),
                                       y = 20.45e9-1,
@@ -143,7 +177,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     pivot_wider(names_from = iso, values_from = c(med, low, upp)) %>% 
     mutate_at(vars(-intv),
               ~ . * 1e-9, TRUE ~ as.numeric(.)) %>% 
-    mutate(across(-intv, ~ round(.x, digits = 1)),
+    mutate(across(-intv, ~ round(.x, digits = 4)),
            across(-intv, ~ format(.x, big.mark = ",", scientific = FALSE))) %>% 
     rowwise() %>%
     mutate(across(matches("^med_"), ~ trimws(paste0(.x, "B\n(", 
@@ -160,6 +194,9 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     mutate(BRA = ifelse(BRA == 'NAB\n(NA-NAB)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAB\n(NA-NAB)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAB\n(NA-NAB)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(costt2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -182,8 +219,20 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   
   costdaly <- filter(cea, var %in% c('Inc_costs', 'DALY_avert')) %>% 
     pivot_wider(names_from = var, values_from = c(med, low, upp), names_glue = "{var}.{.value}") %>%
-    arrange(factor(intv))
-    
+    arrange(factor(intv)) %>%
+    mutate(DALY_avert.low = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, DALY_avert.low),DALY_avert.low),
+           DALY_avert.med = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, DALY_avert.med),DALY_avert.med),
+           DALY_avert.upp = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, DALY_avert.upp),DALY_avert.upp),
+           DALY_avert.low = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, DALY_avert.low),DALY_avert.low),
+           DALY_avert.med = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, DALY_avert.med),DALY_avert.med),
+           DALY_avert.upp = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, DALY_avert.upp),DALY_avert.upp),
+           Inc_costs.low  = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, Inc_costs.low),Inc_costs.low),
+           Inc_costs.med  = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, Inc_costs.med),Inc_costs.med),
+           Inc_costs.upp  = ifelse(intv == "DGN",ifelse(iso %in% c("BRA","ZAF"), 0, Inc_costs.upp),Inc_costs.upp),
+           Inc_costs.low  = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, Inc_costs.low),Inc_costs.low),
+           Inc_costs.med  = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, Inc_costs.med),Inc_costs.med),
+           Inc_costs.upp  = ifelse(intv == "DST",ifelse(iso %in% c("IND","ZAF"), 0, Inc_costs.upp),Inc_costs.upp))
+  
   g_legend <- function(a.gplot){ 
     tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
     leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
@@ -191,7 +240,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     legend
   } 
 
-  tempforlegend <- ggplot(filter(costdaly, intv != "BAU")) +
+  tempforlegend <- ggplot(filter(costdaly, !intv %in% c("BAU"))) +
     facet_wrap(~iso, scales = "free", labeller = as_labeller(c("BRA" = "Brazil", "IND" = "India", "ZAF" = "South Africa"))) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
@@ -218,7 +267,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   
   legend <- g_legend(tempforlegend)
 
-  cea_zaf <- ggplot(filter(costdaly, intv != "BAU", iso == "ZAF")) +
+  cea_zaf <- ggplot(filter(costdaly, !intv %in% c("BAU","DGN","DST"), iso == "ZAF")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord,labels=intv_name2)), alpha=0.5, size=2.5) + 
@@ -244,7 +293,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   
   negscal <- layer_scales(cea_zaf)$y$range$range[1]/layer_scales(cea_zaf)$y$range$range[2]
   
-  cea_bra_temp <- ggplot(filter(costdaly, intv != "BAU", iso == "BRA")) +
+  cea_bra_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","DGN"), iso == "BRA")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord,labels=intv_name2)), alpha=0.5, size=2.5) + 
@@ -270,7 +319,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   bra_min <- negscal*layer_scales(cea_bra_temp)$y$range$range[2]
   bra_max <- layer_scales(cea_bra_temp)$y$range$range[2]
   
-  cea_bra <- ggplot(filter(costdaly, intv != "BAU", iso == "BRA")) +
+  cea_bra <- ggplot(filter(costdaly, !intv %in% c("BAU","DGN"), iso == "BRA")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord,labels=intv_name2)), alpha=0.5, size=2.5) + 
@@ -294,7 +343,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
           legend.position = "none") +
     guides(colour = guide_legend(nrow = 2, byrow = TRUE))
   
-  cea_ind_temp <- ggplot(filter(costdaly, intv != "BAU", iso == "IND")) +
+  cea_ind_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","DST"), iso == "IND")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord,labels=intv_name2)), alpha=0.5, size=2.5) + 
@@ -321,7 +370,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   ind_min <- negscal*layer_scales(cea_ind_temp)$y$range$range[2]
   ind_max <- layer_scales(cea_ind_temp)$y$range$range[2]
   
-  cea_ind <- ggplot(filter(costdaly, intv != "BAU", iso == "IND")) +
+  cea_ind <- ggplot(filter(costdaly, !intv %in% c("BAU","DST"), iso == "IND")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord,labels=intv_name2)), alpha=0.5, size=2.5) + 
@@ -380,7 +429,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   
   legend3 <- g_legend(tempforlegend3)
   
-  cea_zaf <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "ZAF")) +
+  cea_zaf <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DGN","DST"), iso == "ZAF")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -405,7 +454,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   
   negscal <- layer_scales(cea_zaf)$y$range$range[1]/layer_scales(cea_zaf)$y$range$range[2]
   
-  cea_bra_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "BRA")) +
+  cea_bra_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DGN"), iso == "BRA")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -430,7 +479,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   bra_min <- negscal*layer_scales(cea_bra_temp)$y$range$range[2]
   bra_max <- layer_scales(cea_bra_temp)$y$range$range[2]
   
-  cea_bra <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "BRA")) +
+  cea_bra <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DGN"), iso == "BRA")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -453,7 +502,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
           legend.position = "none") +
     guides(colour = guide_legend(nrow = 2, byrow = TRUE))
   
-  cea_ind_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "IND")) +
+  cea_ind_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DST"), iso == "IND")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -478,7 +527,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   ind_min <- negscal*layer_scales(cea_ind_temp)$y$range$range[2]
   ind_max <- layer_scales(cea_ind_temp)$y$range$range[2]
   
-  cea_ind <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "IND")) +
+  cea_ind <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DST"), iso == "IND")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -508,7 +557,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   dev.off()
 
 # Cea2Fig3: Cost v DALY (no high cost screening, with labels)
-  cea_zaf <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "ZAF")) +
+  cea_zaf <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DGN","DST"), iso == "ZAF")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -535,7 +584,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   
   negscal <- layer_scales(cea_zaf)$y$range$range[1]/layer_scales(cea_zaf)$y$range$range[2]
   
-  cea_bra_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "BRA")) +
+  cea_bra_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DGN"), iso == "BRA")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -562,7 +611,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   bra_min <- negscal*layer_scales(cea_bra_temp)$y$range$range[2]
   bra_max <- layer_scales(cea_bra_temp)$y$range$range[2]
   
-  cea_bra <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "BRA")) +
+  cea_bra <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DGN"), iso == "BRA")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -587,7 +636,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
           legend.position = "none") +
     guides(colour = guide_legend(nrow = 2, byrow = TRUE))
   
-  cea_ind_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "IND")) +
+  cea_ind_temp <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DST"), iso == "IND")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -614,7 +663,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
   ind_min <- negscal*layer_scales(cea_ind_temp)$y$range$range[2]
   ind_max <- layer_scales(cea_ind_temp)$y$range$range[2]
   
-  cea_ind <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi"), iso == "IND")) +
+  cea_ind <- ggplot(filter(costdaly, !intv %in% c("BAU","SCRhi","DST"), iso == "IND")) +
     geom_hline(yintercept = 0, size = 1) +
     geom_vline(xintercept = 0, size = 1) +
     geom_point(aes(x = DALY_avert.med, y = Inc_costs.med, colour = factor(intv,levels = intv_ord3,labels=intv_name3)), alpha=0.5, size=2.5) + 
@@ -650,7 +699,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     filter(var == "DALY") %>%
     select(iso, intv, med, low, upp) %>% 
     pivot_wider(names_from = iso, values_from = c(med, low, upp)) %>% 
-    mutate(across(-intv, ~ round(.x * 1e-6, digits = 1)))%>% #,
+    mutate(across(-intv, ~ round(.x * 1e-6, digits = 2)))%>% #,
     rowwise() %>%
     mutate(across(matches("^med_"), ~ trimws(paste0(.x, "M\n", "(",
                                                     trimws(get(sub("med_", "low_", cur_column()))), "-",
@@ -666,6 +715,9 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     mutate(BRA = ifelse(BRA == 'NAM\n(NA-NAM)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAM\n(NA-NAM)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAM\n(NA-NAM)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF) %>% 
     ungroup()
@@ -701,6 +753,9 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     mutate(BRA = ifelse(BRA == 'NAM\n(NA-NAM)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAM\n(NA-NAM)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAM\n(NA-NAM)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF) %>% 
     ungroup() %>% 
@@ -737,6 +792,9 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     mutate(BRA = ifelse(BRA == "NA \n(NA-NA)", '-', BRA)) %>%
     mutate(IND = ifelse(IND == "NA \n(NA-NA)", '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == "NA \n(NA-NA)", '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(nb2) <- c("Intervention", "Brazil", "India", "South Africa")
@@ -768,13 +826,16 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     rename_with(~ sub("^med_", "", .), matches("^med_"))
   
   budg2 <- budg %>%
-    filter(!(str_detect(intv, 'BAU'))) %>%
+    #filter(!(str_detect(intv, 'BAU'))) %>%
     select(intv, BRA, IND, ZAF) %>%
-    arrange(factor(intv, levels = intv_ord)) %>%
-    mutate(intvn = intv_name[match(intv, intv_ord)]) %>%
+    arrange(factor(intv, levels = intv_ord5)) %>%
+    mutate(intvn = intv_name5[match(intv, intv_ord5)]) %>%
     mutate(BRA = ifelse(BRA == 'NAB\n(NA-NAB)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAB\n(NA-NAB)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAB\n(NA-NAB)', '-', ZAF)) %>%
+    mutate(BRA = ifelse(intv %in% c('DGN'), '-', BRA)) %>%
+    mutate(IND = ifelse(intv %in% c('DST'), '-', IND)) %>%
+    mutate(ZAF = ifelse(intv %in% c('DGN','DST'), '-', ZAF)) %>%
     relocate(5) %>%
     select(intvn, BRA, IND, ZAF)
   colnames(budg2) <- c("Intervention", "Brazil", "India", "South Africa")
