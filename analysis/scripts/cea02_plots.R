@@ -25,7 +25,7 @@ suppressPackageStartupMessages({
 rm(list = ls())
 
 # Load the file
-cea <- as.data.table(read_fst(here("outputs", "res", "summ", "ceasumm.fst")))
+cea <- as.data.table(read_fst(here("outputs", "res", "summ", "ceasumm_cov80_20260427.fst")))
 cea_mean <- cea # For summaries using mean and local currency (see end of script)
 
 # Summarise runs using medians
@@ -60,6 +60,10 @@ intv_ord3  <- c("VAX", "TPT", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
 intv_ord4  <- c("BAU","VAX", "TPT", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
 intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr", 
                "Impr\nDiag", "DST\nfor all", "Short\nDS", "Short\nDR", "Pri\nScr", "Nutr")
+intv_ord5  <- c("BAU","VAX", "TPT", "SCRhi", "SCRlo", "DGN", "DST", "SDS", "SDR", "PRI", "NTN")
+intv_name5 <- c("BAU","Vacc", "TPT", "Comm\nScr (high)", "Comm\nScr (low)", 
+                "Impr\nDiag", "DST\nfor all", "Short\nDS", "Short\nDR", "Pri\nScr", "Nutr")
+
 
 # Cea1Fig1: Incremental budget (relative to BAU)
   png(here('outputs', 'res', 'plots', paste0("cea1fig1_incbudget_",format(Sys.time(),"%Y%m%d_%H-%M"),".png")), width = 16, height = 7, units = 'in', res = 1000)
@@ -143,7 +147,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     pivot_wider(names_from = iso, values_from = c(med, low, upp)) %>% 
     mutate_at(vars(-intv),
               ~ . * 1e-9, TRUE ~ as.numeric(.)) %>% 
-    mutate(across(-intv, ~ round(.x, digits = 1)),
+    mutate(across(-intv, ~ round(.x, digits = 4)),
            across(-intv, ~ format(.x, big.mark = ",", scientific = FALSE))) %>% 
     rowwise() %>%
     mutate(across(matches("^med_"), ~ trimws(paste0(.x, "B\n(", 
@@ -650,7 +654,7 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     filter(var == "DALY") %>%
     select(iso, intv, med, low, upp) %>% 
     pivot_wider(names_from = iso, values_from = c(med, low, upp)) %>% 
-    mutate(across(-intv, ~ round(.x * 1e-6, digits = 1)))%>% #,
+    mutate(across(-intv, ~ round(.x * 1e-6, digits = 2)))%>% #,
     rowwise() %>%
     mutate(across(matches("^med_"), ~ trimws(paste0(.x, "M\n", "(",
                                                     trimws(get(sub("med_", "low_", cur_column()))), "-",
@@ -768,10 +772,10 @@ intv_name4 <- c("BAU","Vacc", "TPT", "Comm\nScr",
     rename_with(~ sub("^med_", "", .), matches("^med_"))
   
   budg2 <- budg %>%
-    filter(!(str_detect(intv, 'BAU'))) %>%
+    #filter(!(str_detect(intv, 'BAU'))) %>%
     select(intv, BRA, IND, ZAF) %>%
-    arrange(factor(intv, levels = intv_ord)) %>%
-    mutate(intvn = intv_name[match(intv, intv_ord)]) %>%
+    arrange(factor(intv, levels = intv_ord5)) %>%
+    mutate(intvn = intv_name5[match(intv, intv_ord5)]) %>%
     mutate(BRA = ifelse(BRA == 'NAB\n(NA-NAB)', '-', BRA)) %>%
     mutate(IND = ifelse(IND == 'NAB\n(NA-NAB)', '-', IND)) %>%
     mutate(ZAF = ifelse(ZAF == 'NAB\n(NA-NAB)', '-', ZAF)) %>%

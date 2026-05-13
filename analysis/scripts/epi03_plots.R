@@ -723,3 +723,150 @@ intv_name2 <- c("BAU", "Vacc", "TPT", "Comm Scr", "Impr Diag", "DST for all",
   png(here('outputs', 'res', 'plots', paste("epi4fig3_mort_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 8, units = 'in', res = 1000)
   (morttime_bra | morttime_ind | morttime_zaf) / legend + plot_layout(heights = c(2, 0.2))
   dev.off()
+
+# Epi4Fig4: Change in incidence (sTB) over time
+  inctime_brafull <- ggplot(filter(episumm, var == "inctimestb", iso == "BRA")) +
+    #geom_errorbar(aes(x=2022,ymin=37,ymax=51),colour="black",size=1) +
+    geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.1) +
+    geom_line(aes(x=year,y=med,col=intv),size=1) +
+    geom_line(data=filter(episumm, var == "inctimestb", iso == "BRA", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
+    geom_errorbar(aes(x=2022,ymin=37,ymax=51),colour="black",size=1) +
+    annotate("rect",xmin=2045,xmax=2050,ymin=67,ymax= 73,alpha=0,color="black",size=1) +
+    annotate("segment",x=2031,y=88.4,xend=2047.5,yend=73,color="black",size=1) +
+    scale_fill_manual(values = intv_col) +
+    scale_color_manual(values = intv_col) +
+    scale_x_continuous("",lim=c(2020,2051),expand=c(0,0),breaks=c(2020,2030,2040,2050)) + 
+    scale_y_continuous("sTB incidence per 100,000",expand=c(0,0),lim=c(0,111)) +
+    labs(title="Brazil") +
+    theme_classic(base_size=18) +
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = "none",
+          axis.ticks.x = element_blank(),
+          strip.placement = "outside", 
+          plot.margin = margin(0, 0.6, 0, 0, "cm"),
+          strip.background.x = element_rect(color = "white", fill = NULL), 
+          strip.text = element_text(size = 18))
+  inctime_brazoom <- ggplotGrob(ggplot(filter(episumm, var == "inctimestb", iso == "BRA")) +
+                                  geom_line(aes(x=year,y=med,col=intv),size=1) +
+                                  scale_fill_manual(values = intv_col) +
+                                  scale_color_manual(values = intv_col) +
+                                  geom_line(data=filter(episumm, var == "inctimestb", iso == "BRA", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
+                                  scale_x_continuous("",lim=c(2045,2050),expand=c(0,0),breaks=c(2045,2050)) + 
+                                  scale_y_continuous("",expand=c(0,0),lim=c(67,73),breaks=c(67,70,73)) +
+                                  theme_classic(base_size=18) +
+                                  theme(plot.title = element_text(hjust = 0.5),
+                                        legend.position = "none",
+                                        #axis.ticks = element_blank(),
+                                        #axis.text = element_blank(),
+                                        axis.title = element_blank(),
+                                        #axis.line = element_line(color = "white"),
+                                        #axis.ticks.length = unit(0, "pt"),
+                                        plot.margin = margin(0.25, 0.6, 0.1, 0.15, "cm"),
+                                        strip.placement = "outside", 
+                                        #plot.margin = unit(c(0, 0, 0, 0), "null"),
+                                        strip.background.x = element_rect(color = "white", fill = NULL), 
+                                        strip.text = element_text(size = 18)))
+  inctime_bra <- inctime_brafull + 
+    #annotation_custom(grob=inctime_brazoom,xmin=2022,xmax=2037,ymin=70,ymax=110) +
+    annotation_custom(grob=inctime_brazoom,xmin=2022,xmax=2040,ymin=88.4,ymax=110) +
+    #annotate("rect",xmin=2022,xmax=2037,ymin=70,ymax=110,alpha=0,color="black",size=1)
+    annotate("rect",xmin=2022,xmax=2040,ymin=88.4,ymax=110,alpha=0,color="black",size=1)
+  
+  inctime_indfull <- ggplot(filter(episumm, var == "inctimestb", iso == "IND")) +
+    geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.1) +
+    geom_line(aes(x=year,y=med,col=intv),size=1) +
+    #geom_errorbar(aes(x=2022,ymin=139,ymax=189),colour="black",size=1) +
+    geom_line(data=filter(episumm, var == "inctimestb", iso == "IND", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
+    geom_errorbar(aes(x=2022,ymin=139,ymax=189),colour="black",size=1) +
+    annotate("rect",xmin=2045,xmax=2050,ymin=43,ymax=63,alpha=0,color="black",size=1) +
+    annotate("segment",x=2040,y=140,xend=2047.5,yend=63,color="black",size=1) +
+    scale_fill_manual(values = intv_col) +
+    scale_color_manual(values = intv_col) +
+    scale_x_continuous("Year",lim=c(2020,2051),expand=c(0,0),breaks=c(2020,2030,2040,2050)) + 
+    scale_y_continuous("",expand=c(0,0),lim=c(0,222)) +
+    labs(title="India") +
+    theme_classic(base_size=18) +
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = "none",
+          axis.ticks.x = element_blank(),
+          strip.placement = "outside", 
+          plot.margin = margin(0, 0.6, 0, 0, "cm"),
+          strip.background.x = element_rect(color = "white", fill = NULL), 
+          strip.text = element_text(size = 18))
+  inctime_indzoom <- ggplotGrob(ggplot(filter(episumm, var == "inctimestb", iso == "IND")) +
+                                  geom_line(aes(x=year,y=med,col=intv),size=1) +
+                                  scale_fill_manual(values = intv_col) +
+                                  scale_color_manual(values = intv_col) +
+                                  geom_line(data=filter(episumm, var == "inctimestb", iso == "IND", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
+                                  scale_x_continuous("",lim=c(2045,2050),expand=c(0,0),breaks=c(2045,2050)) + 
+                                  scale_y_continuous("",expand=c(0,0),lim=c(43,63)) +
+                                  theme_classic(base_size=18) +
+                                  theme(plot.title = element_text(hjust = 0.5),
+                                        legend.position = "none",
+                                        #axis.ticks = element_blank(),
+                                        #axis.text = element_blank(),
+                                        axis.title = element_blank(),
+                                        #axis.line = element_line(color = "white"),
+                                        #axis.ticks.length = unit(0, "pt"),
+                                        plot.margin = margin(0.2, 0.6, 0.1, 0.1, "cm"),
+                                        strip.placement = "outside", 
+                                        #plot.margin = unit(c(0, 0, 0, 0), "null"),
+                                        strip.background.x = element_rect(color = "white", fill = NULL), 
+                                        strip.text = element_text(size = 18)))
+  inctime_ind <- inctime_indfull + 
+    #annotation_custom(grob=inctime_indzoom,xmin=2035,xmax=2050,ymin=140,ymax=220) +
+    #annotate("rect",xmin=2035,xmax=2050,ymin=140,ymax=220,alpha=0,color="black",size=1)
+    annotation_custom(grob=inctime_indzoom,xmin=2030,xmax=2050,ymin=140,ymax=220) +
+    annotate("rect",xmin=2030,xmax=2050,ymin=140,ymax=220,alpha=0,color="black",size=1)
+  
+  inctime_zaffull <- ggplot(filter(episumm, var == "inctimestb", iso == "ZAF")) +
+    geom_ribbon(aes(x=year,min=low,max=upp,fill=intv),size=1,alpha=.1) +
+    geom_line(aes(x=year,y=med,col=intv),size=1) +
+    #geom_errorbar(aes(x=2022,ymin=280,ymax=614),colour="black",size=1) +
+    geom_line(data=filter(episumm, var == "inctimestb", iso == "ZAF", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
+    geom_errorbar(aes(x=2022,ymin=280,ymax=614),colour="black",size=1) +
+    annotate("rect",xmin=2045,xmax=2050,ymin=142,ymax=171,alpha=0,color="black",size=1) +
+    annotate("segment",x=2037.5,y=515,xend=2047.5,yend=171,color="black",size=1) +
+    scale_fill_manual(values = intv_col) +
+    scale_color_manual(values = intv_col) +
+    scale_x_continuous("",lim=c(2020,2050),expand=c(0,0),breaks=c(2020,2030,2040,2050)) + 
+    scale_y_continuous("",expand=c(0,0),lim=c(0,666)) + 
+    labs(title="South Africa") +
+    theme_classic(base_size=18) +
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = "none",
+          axis.ticks.x = element_blank(),
+          strip.placement = "outside", 
+          plot.margin = margin(0, 0.6, 0, 0, "cm"),
+          strip.background.x = element_rect(color = "white", fill = NULL), 
+          strip.text = element_text(size = 18))
+  inctime_zafzoom <- ggplotGrob(ggplot(filter(episumm, var == "inctimestb", iso == "ZAF")) +
+                                  geom_line(aes(x=year,y=med,col=intv),size=1) +
+                                  scale_fill_manual(values = intv_col) +
+                                  scale_color_manual(values = intv_col) +
+                                  geom_line(data=filter(episumm, var == "inctimestb", iso == "ZAF", intv == "BAU"), aes(x=year,y=med), col="black",linetype=2, size=1.5) +
+                                  scale_x_continuous("",lim=c(2045,2050),expand=c(0,0),breaks=c(2045,2050)) + 
+                                  scale_y_continuous("",expand=c(0,0),lim=c(142,171)) +
+                                  theme_classic(base_size=18) +
+                                  theme(plot.title = element_text(hjust = 0.5),
+                                        legend.position = "none",
+                                        #axis.ticks = element_blank(),
+                                        #axis.text = element_blank(),
+                                        axis.title = element_blank(),
+                                        #axis.line = element_line(color = "white"),
+                                        #axis.ticks.length = unit(0, "pt"),
+                                        plot.margin = margin(0.2, 0.6, 0.1, 0.1, "cm"),
+                                        strip.placement = "outside", 
+                                        #plot.margin = unit(c(0, 0, 0, 0), "null"),
+                                        strip.background.x = element_rect(color = "white", fill = NULL), 
+                                        strip.text = element_text(size = 18)))
+  inctime_zaf <- inctime_zaffull + 
+    #annotation_custom(grob=inctime_zafzoom,xmin=2035,xmax=2050,ymin=420,ymax=660) +
+    #annotate("rect",xmin=2035,xmax=2050,ymin=420,ymax=660,alpha=0,color="black",size=1)
+    annotation_custom(grob=inctime_zafzoom,xmin=2025,xmax=2050,ymin=515,ymax=660) +
+    annotate("rect",xmin=2025,xmax=2050,ymin=515,ymax=660,alpha=0,color="black",size=1)
+  
+  png(here('outputs', 'res', 'plots', paste("epi4fig4_inczoom_",format(Sys.time(), "%Y%m%d_%H-%M"),".png")), width = 16, height = 8, units = 'in', res = 1000)
+  (inctime_bra | inctime_ind | inctime_zaf) / legend + plot_layout(heights = c(2, 0.2))
+  dev.off()
+  
